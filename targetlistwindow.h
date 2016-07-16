@@ -40,6 +40,7 @@ class TargetListWindow : public QDialog
 public:
     explicit TargetListWindow(LifeSupport* dataPackage, QWidget *parent = 0);
     Ui::TargetListWindow *ui ;
+    QWidget *parent;
     ~TargetListWindow();
     void setMainPic (QString imagePath) ;
     void loadTargets (QString folderPath, QString filePath) ;
@@ -48,19 +49,12 @@ public:
 
 private slots:
     void on_newItem_clicked();
-
     void on_edit_clicked();
-
     void on_deleteButton_clicked();
-
     void on_upButton_clicked();
-
     void on_downButton_clicked();
-
     void sort(int col);
-
     void on_targetListTable_doubleClicked(const QModelIndex &index);
-
     void on_targetListTable_clicked(const QModelIndex &index);
 
 private:

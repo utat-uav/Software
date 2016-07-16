@@ -1,11 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "imagewidget.h"
+#include "loadingbardialog.h"
 
 #include <QSettings>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+    loading(false),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -64,7 +66,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // Set up completer
     completer = new QCompleter(prevCommands, this);
     ui->consoleCommander->setCompleter(completer);
-    dataPackage = new LifeSupport(classifier,ui->consoleOutput) ;
+    dataPackage = new LifeSupport(classifier,ui->consoleOutput);
+
+    loadingBarDialog = new LoadingBarDialog(this);
 }
 
 void MainWindow::ReadOut()
@@ -115,10 +119,17 @@ MainWindow::~MainWindow()
 
     classifier->close();
     classifier->terminate();
+
+    foreach (const auto &item, *items)
+    {
+        delete item;
+    }
+
     delete items;
     delete ui;
     delete classifier;
     delete completer;
+    delete loadingBarDialog;
 }
 
 void MainWindow::on_MainWindow_destroyed()
@@ -179,11 +190,11 @@ void MainWindow::refreshTable()
     for (int i = 0; i < items->size(); i++) {
         ImageWidget *temp = new ImageWidget(dataPackage, this, false);
         // Copy all information over
-        temp->setImage(items->at(i)->getImage());
         temp->setTitle(items->at(i)->getTitle());
         temp->setFilePath(items->at(i)->getFilePath());
         temp->setFolderPath(items->at(i)->getFolderPath());
         temp->setImagePath(items->at(i)->getImagePath());
+        temp->setImage(items->at(i)->getImage());
         temp->setNumTargets(items->at(i)->getNumTargets());
         temp->setSeen(items->at(i)->getSeen());
 
@@ -193,7 +204,7 @@ void MainWindow::refreshTable()
         items->at(i)->changeTargetListWindow(NULL);
 
         itemsCopy->append(temp);
-
+        (items->at(i))->finishLoading();
         delete &*(items->at(i));
     }
 
@@ -234,6 +245,8 @@ void MainWindow::refreshTable()
         }
     }
 
+    qDebug() << "Done refreshing";
+
     // Take care of memory
     delete itemsCopy;
 }
@@ -246,7 +259,7 @@ QList<ImageWidget*>* MainWindow::getItems()
 void MainWindow::appendItem(QString folderPath, QString filePath, QString imagePath, QString title, int numTargets)
 {
     // Creates item
-    ImageWidget *newWidget = new ImageWidget(dataPackage, this);
+    ImageWidget *newWidget = new ImageWidget(dataPackage, this, false);
     newWidget->setTitle(title);
     newWidget->setImage(imagePath);
     newWidget->setFilePath(filePath);
@@ -266,10 +279,46 @@ void MainWindow::indexToCoordinates(int index, int *r, int *c)
 
 void MainWindow::on_loadButton_clicked()
 {
+    if (loading) return;
+
     QSettings config(QDir::currentPath()+"config.ini",QSettings::IniFormat);
     // Gets the directory from a separate window
     QString dir = QFileDialog::getExistingDirectory(this, tr("Load Directory..."), config.value("User Settings/Image Folder","/home").toString(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     config.setValue("User Settings/Image Folder",dir);
+
+    if (dir == "") return;
+
+    // Get mumber of files
+    QStringList nameFilter;
+    nameFilter.append("*.ini");
+    QDir directory(dir);
+    QStringList fileList = directory.entryList(nameFilter);
+
+    loadingBarDialog->setWindowTitle("Loading");
+    loadingBarDialog->setStatus("Loading images...");
+    loadingBarDialog->setPercent(0);
+    loadingBarDialog->show();
+
+    // Create and connect thread
+    MainWindowLoader* loader = new MainWindowLoader(this, dir);
+    connect(loader, &MainWindowLoader::finished, loader, &QObject::deleteLater);
+    connect(loader, &MainWindowLoader::destroyed, [=](){
+        loadingBarDialog->hide();
+        refreshTable();
+        loading = false;
+    });
+    connect(loader, &MainWindowLoader::statusUpdate, [=](int value){
+        if (loadingBarDialog)
+            loadingBarDialog->setPercent((double)value/fileList.size()*100.0);
+    });
+    loading = true;
+
+    // Start thread
+    loader->start();
+}
+
+void MainWindowLoader::run()
+{
     // Create filter
     QStringList nameFilter;
     nameFilter.append("*.ini");
@@ -279,7 +328,8 @@ void MainWindow::on_loadButton_clicked()
     QStringList fileList = directory.entryList(nameFilter);
 
     // Goes through each file and opening the image
-    foreach ( QString file, fileList){
+    int count = 0;
+    foreach (QString file, fileList){
         QString filePath = dir+"/"+file ;
         QSettings resultFile(filePath,QSettings::IniFormat);
         QString imagePath = resultFile.value("Analysis Parameters/IMAGE","").toString() ; //pass directory to image widget
@@ -287,23 +337,15 @@ void MainWindow::on_loadButton_clicked()
         QFileInfo fileInfo(imagePath);
         QString filename(fileInfo.fileName());
         if ( imagePath != "" ){
-            appendItem(dir, filePath, imagePath, filename, numTargets);
+            mainWindow->appendItem(dir, filePath, imagePath, filename, numTargets);
+            ++count;
+            if (count%5 == 0)
+            {
+                emit statusUpdate(count);
+            }
         }
     }
-
-    /*nameFilter.append("*.png");
-    nameFilter.append("*.jpg");
-
-    // Scans through directory, applying the filter
-    QDir directory(dir);
-    QStringList fileList = directory.entryList(nameFilter);
-    foreach (QString filePath, fileList) {
-        appendItem(dir+"/"+filePath, filePath);
-    }*/
-
-    refreshTable();
 }
-
 
 void MainWindow::on_addItemButton_clicked()
 {
@@ -393,7 +435,10 @@ bool MainWindow::findTab(QWidget *tab){
 
 void MainWindow::on_tabWidget_tabCloseRequested(int index)
 {
+    TargetListWindow* targetListWindow = (TargetListWindow*)ui->tabWidget->widget(index);
     ui->tabWidget->removeTab(index);
+    ((ImageWidget*)targetListWindow->parent)->changeTargetListWindow(NULL, false);
+    delete targetListWindow;
     if (ui->tabWidget->count()==0){
         noTabs = true ;
         //ui->tabWidget->addTab(new TargetListWindow, "Target List") ;
@@ -423,8 +468,6 @@ void MainWindow::on_consoleCommander_returnPressed()
     ui->consoleCommander->setText("");
 
 }
-
-
 
 void MainWindow::on_actionProcess_Image_Set_triggered()
 {

@@ -8,6 +8,7 @@
 #include "targetlistwindow.h"
 #include <QMouseEvent>
 #include <QTabWidget>
+#include <QThread>
 #include "mainwindow.h"
 #include "lifesupport.h"
 
@@ -20,6 +21,18 @@ class ImageWidget : public QWidget
     Q_OBJECT
 
 public:
+    // LOADER THREAD
+    class ImageLoader : public QThread
+    {
+    public:
+        explicit ImageLoader(ImageWidget *imageWidget, QString filePath)
+            : imageWidget(imageWidget), filePath(filePath) {}
+        void run();
+    private:
+        ImageWidget *imageWidget;
+        QString filePath;
+    };
+
     explicit ImageWidget(LifeSupport* dataPackage, MainWindow *parent, bool initTargetList = true);
 
     // Setters
@@ -39,7 +52,7 @@ public:
     QPixmap& getImage();
     QString getFolderPath() const;
     QString getFilePath() const;
-    TargetListWindow* getTargetList() const;
+    TargetListWindow* getTargetList();
     int getNumTargets() const;
     bool isInitialized() const;
     bool getSeen() const;
@@ -47,6 +60,10 @@ public:
     void deleteTargetListWindow();
 
     void changeTargetListWindow(TargetListWindow* targetList, bool alreadyInitialized = true);
+    void setImagePathString(QString imagePath);
+    void finishLoading();
+
+    friend class ImageLoader;
 
     ~ImageWidget();
 
@@ -61,10 +78,10 @@ protected:
     TargetListWindow *targetList;
     bool targetListInitialized;
     bool seen;
+    ImageLoader* loader;
+    bool loadingFinished;
 
 private slots:
-
-
     void on_pinButton_clicked();
 
 private:

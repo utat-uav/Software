@@ -4,6 +4,7 @@
 
 TargetListWindow::TargetListWindow(LifeSupport *dataPackage, QWidget *parent) :
     QDialog(parent),
+    parent(parent),
     ui(new Ui::TargetListWindow)
 {
     this->loader = NULL;

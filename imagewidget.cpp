@@ -3,6 +3,8 @@
 
 ImageWidget::ImageWidget(LifeSupport *dataPackage, MainWindow *parent, bool initTargetList) :
     QWidget(parent),
+    loader(NULL),
+    loadingFinished(true),
     ui(new Ui::ImageWidget)
 {
     imagePath = "";
@@ -13,14 +15,8 @@ ImageWidget::ImageWidget(LifeSupport *dataPackage, MainWindow *parent, bool init
     mainWindow = parent ;
     this->dataPackage=dataPackage;
 
-    // Initialize imageLabel
-    //setImage(":/images/Untitled.png");
-
-    //ui->imageLabel->setScaledContents(true);
-    //ui->imageLabel->setSizePolicy( QSizePolicy::Ignored, QSizePolicy::Ignored );
-
     if (initTargetList)
-        targetList = new TargetListWindow(dataPackage);
+        targetList = new TargetListWindow(dataPackage, this);
     else
         targetList = NULL;
     targetListInitialized = false;
@@ -31,6 +27,7 @@ ImageWidget::ImageWidget(LifeSupport *dataPackage, MainWindow *parent, bool init
 
 ImageWidget::~ImageWidget()
 {
+    delete loader;
     delete targetList;
     delete ui;
 }
@@ -106,22 +103,46 @@ void ImageWidget::setNumTargets(int numTargets)
     this->numTargets = numTargets;
 }
 
+void ImageWidget::finishLoading()
+{
+    if (!loadingFinished) qDebug() << "Not done";
+    /*
+    while (!loadingFinished)
+    {
+        // Stall
+        qDebug() << "Stalling";
+    }
+    */
+    if (loader)
+        loader->wait();
+}
+
 void ImageWidget::setImage(QString imagePath)
 {
-    if (imagePath != "") {
-        QPixmap *pix = new QPixmap();
-        pix->load(imagePath);
-        image = pix->scaled(220, 220, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation);
-        ui->imageLabel->setPixmap(image);
-        this->imagePath = imagePath;
-        delete pix;
-    }
+    loadingFinished = false;
+    this->imagePath = imagePath;
+    loader = new ImageLoader(this, imagePath);
+    connect(loader, &ImageLoader::finished, [=](){
+        loadingFinished = true;
+    });
+    loader->start();
 }
 
 void ImageWidget::setImage(QPixmap &resizedImage)
 {
-    ui->imageLabel->setPixmap(resizedImage);
-    image = resizedImage;
+    if (resizedImage.size().width() == 0 && resizedImage.size().height() == 0)
+    {
+        QPixmap *pix = new QPixmap();
+        pix->load(imagePath);
+        this->image = pix->scaled(220, 220, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation);
+        this->ui->imageLabel->setPixmap(this->image);
+        delete pix;
+    }
+    else
+    {
+        ui->imageLabel->setPixmap(resizedImage);
+        image = resizedImage;
+    }
 }
 
 bool ImageWidget::isInitialized() const
@@ -135,46 +156,31 @@ void ImageWidget::deleteTargetListWindow()
     this->targetList = NULL;
 }
 
-/*bool ImageWidget::getSeen() const
-{
-    return this->seen;
-}*/
-
 void ImageWidget::changeTargetListWindow(TargetListWindow* targetList, bool alreadyInitialized)
 {
     this->targetList = targetList;
     this->targetListInitialized = alreadyInitialized;
 }
 
-TargetListWindow* ImageWidget::getTargetList() const
+TargetListWindow* ImageWidget::getTargetList()
 {
     return this->targetList;
 }
 
-/*void ImageWidget::setTabWidget(QTabWidget* tabWidget ) {
-    this->tabWidget = tabWidget ;
-}*/
-
 void ImageWidget::mouseDoubleClickEvent(QMouseEvent *event){
-    if ( event->button() == Qt::LeftButton ){
+    if ( event->button() == Qt::LeftButton )
+    {
         ui->colourLabel->setStyleSheet("QLabel { background-color : green; color : blue; }"); // Mark as seen
         this->seen = true;
 
         dataPackage->filePath=filePath;
 
-        /*
-        if (!targetListInitialized) {
-            targetList->setWindowFlags(Qt::Window);
-            targetList->setModal(false);
-            targetList->setWindowTitle(title);
-            targetList->setMainPic(imagePath);
-            targetList->loadTargets(folderPath, filePath) ;
-            targetListInitialized = true;
+        if (targetList == NULL)
+        {
+            targetList = new TargetListWindow(dataPackage, this);
         }
-        targetList->show();*/
 
         if (!targetListInitialized) {
-            //TargetListWindow* newTab = new TargetListWindow ;
             targetList->setMainPic(imagePath);
             targetList->loadTargets(folderPath, filePath) ;
             mainWindow->addTab(targetList, title) ;
@@ -205,4 +211,16 @@ void ImageWidget::on_pinButton_clicked()
     itemsList->insert(0, this);
 
     mainWindow->refreshTable();
+}
+
+void ImageWidget::ImageLoader::run()
+{
+    if (filePath != "")
+    {
+        QPixmap *pix = new QPixmap();
+        pix->load(filePath);
+        imageWidget->image = pix->scaled(220, 220, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation);
+        imageWidget->ui->imageLabel->setPixmap(imageWidget->image);
+        delete pix;
+    }
 }

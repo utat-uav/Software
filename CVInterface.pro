@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     targetmaker.cpp \
     targetwindow.cpp \
     lifesupport.cpp \
-    imagesetprocessor.cpp
+    imagesetprocessor.cpp \
+    loadingbardialog.cpp
 
 HEADERS  += mainwindow.h \
     imagewidget.h \
@@ -33,7 +34,8 @@ HEADERS  += mainwindow.h \
     targetmaker.h \
     targetwindow.h \
     lifesupport.h \
-    imagesetprocessor.h
+    imagesetprocessor.h \
+    loadingbardialog.h
 
 FORMS    += mainwindow.ui \
     imagewidget.ui \
@@ -41,7 +43,8 @@ FORMS    += mainwindow.ui \
     targetlistwindow.ui \
     targetmaker.ui \
     targetwindow.ui \
-    imagesetprocessor.ui
+    imagesetprocessor.ui \
+    loadingbardialog.ui
 
 DISTFILES += \
     clasic.png \
