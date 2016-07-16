@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>clasic.png</file>
+        <file>delete85.png</file>
+        <file>down.png</file>
+        <file>round75.png</file>
+        <file>up.png</file>
+        <file>images/Untitled.png</file>
+        <file>Icon.png</file>
+        <file>Icon.ico</file>
+    </qresource>
+</RCC>
