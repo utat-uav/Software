@@ -2,11 +2,17 @@
 #include "ui_mainwindow.h"
 #include "imagewidget.h"
 
+#include <QSettings>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    QSettings window_settings;
+    restoreGeometry(window_settings.value("WindowGeometry", geometry()).toByteArray());
+    restoreState(window_settings.value("WindowState").toByteArray());
 
     // Initializes variables
     cellWidth = 0;
@@ -14,7 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
     items = new QList<ImageWidget*>;
     ui->tabWidget->removeTab(1);
     ui->tabWidget->removeTab(0);
-    //ui->tabWidget->addTab(new TargetListWindow, "Target List") ;
     noTabs = true ;
 
     // Sets number of columns
@@ -104,6 +109,10 @@ void MainWindow::setColumnCount(int col) {
 
 MainWindow::~MainWindow()
 {
+    QSettings window_settings;
+    window_settings.setValue("WindowGeometry", saveGeometry());
+    window_settings.setValue("WindowState", saveState());
+
     classifier->close();
     classifier->terminate();
     delete items;
