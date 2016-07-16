@@ -38,6 +38,7 @@ public:
 	char classifyWithRotation(InputImage *image, float &confidence);
 	void testBatch(TrainingSet &data);
 	void startCMDInput();
+	void trimString(std::string &str);
 
 	bool isInitialized();
 };

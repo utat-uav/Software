@@ -556,7 +556,8 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 		if (command == "testBatch")
 		{
 			string batchPath;
-			ss >> batchPath;
+			std::getline(ss, batchPath);
+			trimString(batchPath);
 
 			if (ss.fail())
 			{
@@ -580,7 +581,9 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 		else if (command == "classifyWithRotation")
 		{
 			string imagePath;
-			ss >> imagePath;
+			std::getline(ss, imagePath);
+			trimString(imagePath);
+
 			if (ss.fail())
 			{
 				cout << "Insufficient or invalid arguments. Type 'help' for more information" << endl;
@@ -590,7 +593,7 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			// Check file validity
 			ifstream ifile(imagePath);
 			if (!ifile) {
-				cout << "Not a valid file path" << endl;
+				cout << imagePath << " is not a valid file path" << endl;
 				continue;
 			}
 			ifile.close();
@@ -630,7 +633,9 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 		else if (command == "classify")
 		{
 			string imagePath;
-			ss >> imagePath;
+			std::getline(ss, imagePath);
+			trimString(imagePath);
+
 			if (ss.fail())
 			{
 				cout << "Insufficient or invalid arguments. Type 'help' for more information" << endl;
@@ -640,7 +645,7 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			// Check file validity
 			ifstream ifile(imagePath);
 			if (!ifile) {
-				cout << "Not a valid file path" << endl;
+				cout << imagePath << " is not a valid file path" << endl;
 				continue;
 			}
 			ifile.close();
@@ -680,7 +685,9 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 		else if (command == "zbar")
 		{
 			string imagePath;
-			ss >> imagePath;
+			std::getline(ss, imagePath);
+			trimString(imagePath);
+
 			if (ss.fail())
 			{
 				cout << "Insufficient or invalid arguments. Type 'help' for more information" << endl;
@@ -709,4 +716,19 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 bool ConvolutionalNeuralNetwork::isInitialized()
 {
 	return this->initialized;
+}
+
+void ConvolutionalNeuralNetwork::trimString(std::string &str)
+{
+	if (str.size() == 0) return;
+
+	while (str[0] == ' ')
+	{
+		str.erase(0, 1);
+	}
+
+	while (str[str.size() - 1] == ' ')
+	{
+		str.pop_back();
+	}
 }
