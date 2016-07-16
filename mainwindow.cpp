@@ -183,6 +183,7 @@ void MainWindow::resizeTable()
 
 void MainWindow::refreshTable()
 {
+    qDebug() << "Begin table refresh";
     resizeTable();
 
     // Makes copy of the items

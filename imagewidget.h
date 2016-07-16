@@ -27,6 +27,7 @@ public:
     public:
         explicit ImageLoader(ImageWidget *imageWidget, QString filePath)
             : imageWidget(imageWidget), filePath(filePath) {}
+        static int numLoaders;
         void run();
     private:
         ImageWidget *imageWidget;

@@ -1,6 +1,8 @@
 #include "imagewidget.h"
 #include "ui_imagewidget.h"
 
+int ImageWidget::ImageLoader::numLoaders = 0;
+
 ImageWidget::ImageWidget(LifeSupport *dataPackage, MainWindow *parent, bool initTargetList) :
     QWidget(parent),
     loader(NULL),
@@ -27,6 +29,8 @@ ImageWidget::ImageWidget(LifeSupport *dataPackage, MainWindow *parent, bool init
 
 ImageWidget::~ImageWidget()
 {
+    if (loader)
+        loader->wait();
     delete loader;
     delete targetList;
     delete ui;
@@ -106,26 +110,33 @@ void ImageWidget::setNumTargets(int numTargets)
 void ImageWidget::finishLoading()
 {
     if (!loadingFinished) qDebug() << "Not done";
-    /*
-    while (!loadingFinished)
-    {
-        // Stall
-        qDebug() << "Stalling";
-    }
-    */
+
     if (loader)
         loader->wait();
 }
 
 void ImageWidget::setImage(QString imagePath)
 {
+    this->imagePath = imagePath;
+    QPixmap *pix = new QPixmap();
+    pix->load(imagePath);
+    image = pix->scaled(220, 220, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation);
+    ui->imageLabel->setPixmap(image);
+    delete pix;
+    return;
+
+    // Experimental stuff
+    /*
+    ++ImageLoader::numLoaders;
     loadingFinished = false;
     this->imagePath = imagePath;
     loader = new ImageLoader(this, imagePath);
     connect(loader, &ImageLoader::finished, [=](){
         loadingFinished = true;
+        --ImageLoader::numLoaders;
     });
     loader->start();
+    */
 }
 
 void ImageWidget::setImage(QPixmap &resizedImage)
