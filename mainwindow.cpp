@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Read window settings
     QSettings window_settings;
     restoreGeometry(window_settings.value("WindowGeometry", geometry()).toByteArray());
     restoreState(window_settings.value("WindowState").toByteArray());
