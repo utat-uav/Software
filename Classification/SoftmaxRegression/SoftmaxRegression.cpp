@@ -224,7 +224,7 @@ void credits()
 	cout << "                   [-r <testset> <serializedNN>] to run pre-trained program" << endl;
 	cout << "                   [-cnn <serializedNN>] to run pre-trained program" << endl;
 	cout << "                   [-s <dataset>] to serialize dataset" << endl;
-	cout << "                   [-zbar <imagepath>] to serialize dataset" << endl;
+	cout << "                   [-zbar <imagepath>] to read barcode" << endl;
 	cout << "                   [-help me] for help" << endl;
 	cout << endl;
 }
