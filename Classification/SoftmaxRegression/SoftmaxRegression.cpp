@@ -249,6 +249,7 @@ void credits()
 	cout << "                   [-cnn <serializedNN>] to run pre-trained program" << endl;
 	cout << "                   [-s <dataset>] to serialize dataset" << endl;
 	cout << "                   [-zbar <imagepath>] to read barcode" << endl;
+	cout << "                   [-identify <imagepath> <gpsLog> <outputFolder>] to identify and crop" << endl;
 	cout << "                   [-help me] for help" << endl;
 	cout << endl;
 }
