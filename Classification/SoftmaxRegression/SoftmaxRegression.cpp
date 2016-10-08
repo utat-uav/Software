@@ -5,6 +5,7 @@
 #include "FileManager.h"
 #include "ConvolutionalNeuralNetwork.h"
 #include "BarcodeReader.h"
+#include "Identifier.h"
 
 // Guide: 
 // -t "D:\Downloads\Images\Reformatted"  "D:\Downloads\training2\allinone" for training
@@ -30,6 +31,12 @@ void saveProcessedDataset(string path);
 
 int main(int argc, char** argv)
 {
+	// Test identifier with:
+	// -identify "D:\Workspace\UAV\AUVSI2015Pictures\test1.jpg" "D:\Workspace\UAV\AUVSI2015Pictures\uav_gps.log" "D:\Workspace\UAV\AUVSI2015Pictures\Test Output"
+
+	// Test cnn with:
+	// -cnn "D:\Workspace\UAV\Software\Classification\Release\TrainedCNN"
+
 	/*
 	// Serialize for training/testing
 	//saveProcessedDataset("D:\\Workspace\\UAV\\classification-training\\training2\\allinone\\");
@@ -114,6 +121,23 @@ int main(int argc, char** argv)
 		string path = argv[2];
 
 		runZBar(path);
+	}
+	else if (mode == "-identify")
+	{
+		if (argc < 5)
+		{
+			cout << "Insufficient arguments. Exiting program..." << endl;
+			return -1;
+		}
+
+		cout << "// STARTING IDENTIFIER..." << endl << endl;
+		string fileName = argv[2];
+		string gpsLog = argv[3];
+		string outputFolder = argv[4];
+
+		string results;
+		Identifier identifier(fileName, gpsLog, outputFolder, &results);
+		identifier.analyze();
 	}
 	else if (mode == "-help")
 	{
@@ -404,7 +428,7 @@ void runZBar(string path)
 void runCNN(string path, string programPath)
 {
 	cout << "Initializing convolutional neural network..." << endl;
-	cout << "Program path is " << programPath << endl;
+	cout << "Program path is " << programPath << " and the cnn path is " << path << endl;
 	ConvolutionalNeuralNetwork cnn(path, programPath);
 
 	if (!cnn.isInitialized())

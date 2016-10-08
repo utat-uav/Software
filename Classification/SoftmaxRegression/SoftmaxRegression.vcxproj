@@ -54,7 +54,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -142,7 +142,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\Workspace\UAV\cv16-classification\SoftmaxRegression\SoftmaxRegression\ZBar;D:\Workspace\UAV\cv16-classification\SoftmaxRegression\SoftmaxRegression\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\ZBar;$(ProjectDir)\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,7 +158,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\Workspace\UAV\cv16-classification\SoftmaxRegression\SoftmaxRegression\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\ZBar;$(ProjectDir)\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -244,6 +244,7 @@
     <ClInclude Include="BarcodeReader.h" />
     <ClInclude Include="ConvolutionalNeuralNetwork.h" />
     <ClInclude Include="FileManager.h" />
+    <ClInclude Include="Identifier.h" />
     <ClInclude Include="InputImage.h" />
     <ClInclude Include="NeuralNetwork.h" />
     <ClInclude Include="Segmenter.h" />
@@ -255,6 +256,7 @@
     <ClCompile Include="BarcodeReader.cpp" />
     <ClCompile Include="ConvolutionalNeuralNetwork.cpp" />
     <ClCompile Include="FileManager.cpp" />
+    <ClCompile Include="Identifier.cpp" />
     <ClCompile Include="InputImage.cpp" />
     <ClCompile Include="NeuralNetwork.cpp" />
     <ClCompile Include="Segmenter.cpp" />
