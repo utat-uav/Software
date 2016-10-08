@@ -1,6 +1,8 @@
 #include "imagesetprocessor.h"
 #include "ui_imagesetprocessor.h"
 
+#include <QDebug>
+
 ImageSetProcessor::ImageSetProcessor(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ImageSetProcessor)
@@ -39,11 +41,6 @@ void ImageSetProcessor::on_buttonBox_accepted()
 {
 }
 
-void ImageSetProcessor::on_browsePythonPath_clicked()
-{
-    ui->pythonPath->setText(QFileDialog::getExistingDirectory(this, tr("Load Directory..."), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks));
-}
-
 void ImageSetProcessor::on_browseProcessedFolder_clicked()
 {
     ui->processedFolderName->setText(QFileDialog::getExistingDirectory(this, tr("Load Directory..."), "", QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks));
@@ -65,22 +62,23 @@ void ImageSetProcessor::on_buttonBox_clicked(QAbstractButton *button)
         QList<QString> files;
         listFiles(exePath, "", files);
 
-        QString scriptPath;
+        QString classifierPath;
 
         // Find classifier exe
         bool found = false;
         for (int i = 0; i < files.size(); ++i)
         {
-            if (files[i].contains("fextract.py"))
+            if (files[i].contains("SoftmaxRegression.exe"))
             {
-                scriptPath = files[i];
+                classifierPath = files[i];
                 found = true;
+                break;
             }
         }
         if (!found)
         {
             QMessageBox msgBox;
-            msgBox.setText("Python Script Not Found.");
+            msgBox.setText("Classifier Script Not Found.");
             msgBox.exec();
             return;
         }
@@ -109,23 +107,14 @@ void ImageSetProcessor::on_buttonBox_clicked(QAbstractButton *button)
 
             // Get args
             QStringList args;
-            args << scriptPath << images[i] << gpsLogFolder << outputFolder;
+            args << "-identify" << images[i] << gpsLogFolder << outputFolder;
 
             // Make Process
             QProcess scriptProcess;
 
-            // Set process working directory
-            int pos = scriptPath.toStdString().find_last_of('/');
-            QString workingDirectory = QString::fromStdString(scriptPath.toStdString().substr(0, pos));
-            scriptProcess.setWorkingDirectory(workingDirectory);
-
             // Start and wait
-            scriptProcess.start(ui->pythonPath->text() + "\\python.exe", args);
+            scriptProcess.start(classifierPath, args);
             scriptProcess.waitForFinished(-1);
-
-            //QMessageBox msgBox;
-            //msgBox.setText(scriptProcess.readAllStandardError());
-            //msgBox.exec();
         }
     }
 }

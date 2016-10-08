@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
             classifierPath = files[i];
             cnnPath = classifierPath;
             cnnPath.replace("SoftmaxRegression.exe", "TrainedCNN");
+            break;
         }
     }
 
@@ -329,16 +330,21 @@ void MainWindowLoader::run()
     QDir directory(dir);
     QStringList fileList = directory.entryList(nameFilter);
 
+    qDebug() << "HI";
+
     // Goes through each file and opening the image
     int count = 0;
-    foreach (QString file, fileList){
+    foreach (QString file, fileList)
+    {
         QString filePath = dir+"/"+file ;
         QSettings resultFile(filePath,QSettings::IniFormat);
         QString imagePath = resultFile.value("Analysis Parameters/IMAGE","").toString() ; //pass directory to image widget
         int numTargets = resultFile.value("Crop Info/Number of Crops", "").toInt(); // gets the number of targets
         QFileInfo fileInfo(imagePath);
         QString filename(fileInfo.fileName());
-        if ( imagePath != "" ){
+
+        if (imagePath != "")
+        {
             mainWindow->appendItem(dir, filePath, imagePath, filename, numTargets);
             ++count;
             if (count%5 == 0)

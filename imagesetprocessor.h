@@ -27,8 +27,6 @@ private slots:
 
     void on_buttonBox_accepted();
 
-    void on_browsePythonPath_clicked();
-
     void on_browseProcessedFolder_clicked();
 
     void on_pushButton_clicked();
