@@ -239,7 +239,7 @@ void credits()
 	cout << "// UTAT-UAV COMPUTER VISION CLASSIFICATION V2 \\\\" << endl;
 	cout << "------------------------------------------------" << endl;
 	cout << endl;
-	cout << "Author(s): Davis Wu" << endl;
+	cout << "Author(s): Davis Wu, Tianxing Li" << endl;
 	cout << "Creation Date: Dec 30, 2015" << endl;
 	cout << "Latest Modification Date: October 8, 2016" << endl;
 	cout << "Info: attempts to classify characters" << endl;
