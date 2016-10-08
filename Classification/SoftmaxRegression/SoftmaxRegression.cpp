@@ -241,7 +241,7 @@ void credits()
 	cout << endl;
 	cout << "Author(s): Davis Wu" << endl;
 	cout << "Creation Date: Dec 30, 2015" << endl;
-	cout << "Latest Modification Date: April 28, 2016" << endl;
+	cout << "Latest Modification Date: October 8, 2016" << endl;
 	cout << "Info: attempts to classify characters" << endl;
 	cout << endl;
 	cout << "Command line info: [-t <trainingset> <testset>] to train program" << endl;
