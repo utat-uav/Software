@@ -24,4 +24,45 @@ https://drive.google.com/drive/folders/0B7ik7oGEZVhMNkFvalBTeFZxcjA
   * Build and run
 8. Open the Software/CVInterface.pro file with Qt
   * Configure the project to use the MSVC 64 bit kit
+  * Turn off shadow build under project configurations
   * Build and run
+
+# Rules & Style
+
+* Try not to commit non-source code
+* Try not to commit files/code that is specific to your computer
+* Curly brackets go under the function name.
+* Curly brackets also go under for, if, while, do, switch,...
+```
+void davisFunction(int param)
+{ 
+	unsigned i;
+	for (i = 0; i < 10; ++i)
+	{
+		if (true)
+		{
+			++i;
+		}
+		else
+		{
+			--i;
+		}
+	}
+	
+	while (i != 0)
+	{
+		switch (i)
+		{
+		case 5:
+			std::cout << "hello";
+			break;
+		case 4:
+			std::cout << std::endl;
+			break;
+		default:
+			// Do nothing
+		}
+		--i;
+	}
+}
+```
