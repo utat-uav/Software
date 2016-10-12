@@ -33,6 +33,8 @@ https://drive.google.com/drive/folders/0B7ik7oGEZVhMNkFvalBTeFZxcjA
 * Try not to commit files/code that is specific to your computer
 * Curly brackets go under the function name.
 * Curly brackets also go under for, if, while, do, switch,...
+* No magic numbers
+* Use enums or defines for neatness
 ```
 void davisFunction(int param)
 { 
