@@ -5,7 +5,7 @@
 FileManager::FileManager(string folder)
 {
 	FILE* pipe = NULL;
-	string pCmd = "dir /B /S " + string(folder);
+	string pCmd = "dir /B /S \"" + string(folder) + "\"";
 	char buf[256];
 
 	if (NULL == (pipe = _popen(pCmd.c_str(), "rt")))
