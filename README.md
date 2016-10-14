@@ -63,6 +63,7 @@ void davisFunction(int param)
 			break;
 		default:
 			// Do nothing
+			break;
 		}
 		--i;
 	}
