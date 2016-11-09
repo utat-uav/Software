@@ -23,7 +23,9 @@ SOURCES += main.cpp\
     targetwindow.cpp \
     lifesupport.cpp \
     imagesetprocessor.cpp \
-    loadingbardialog.cpp
+    loadingbardialog.cpp \
+    geolocation.cpp \
+    latlon.cpp
 
 HEADERS  += mainwindow.h \
     imagewidget.h \
@@ -35,7 +37,9 @@ HEADERS  += mainwindow.h \
     targetwindow.h \
     lifesupport.h \
     imagesetprocessor.h \
-    loadingbardialog.h
+    loadingbardialog.h \
+    geolocation.h \
+    latlon.h
 
 FORMS    += mainwindow.ui \
     imagewidget.ui \
