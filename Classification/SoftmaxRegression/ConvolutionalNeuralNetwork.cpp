@@ -599,8 +599,8 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			ifile.close();
 
 			// call segmenter first
-			Segmenter segm;
-			vector<cv::Mat> segmentedImages = segm.segment(imagePath);
+			Segmenter segm(imagePath);
+			vector<cv::Mat> segmentedImages = segm.segment();
 
 			string savePath = programPath.substr(0, programPath.find_last_of('\\'));
 			char finalChar = '0';
@@ -651,8 +651,8 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			ifile.close();
 
 			// call segmenter first
-			Segmenter segm;
-			vector<cv::Mat> segmentedImages = segm.segment(imagePath);
+			Segmenter segm(imagePath);
+			vector<cv::Mat> segmentedImages = segm.segment();
 
 			string savePath = programPath.substr(0, programPath.find_last_of('\\'));
 			char finalChar = '0';

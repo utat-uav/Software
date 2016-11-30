@@ -14,9 +14,9 @@ public:
 		{
 			sizeOfROI = 300;
 			minPointsInCluster = 5;
-			maxArea = 30000;
+			maxArea = 300000;
 			minArea = 2650;
-			cropPadding = 8;
+			cropPadding = 3;
 		}
 
 		std::string imagePath;
@@ -50,5 +50,6 @@ private:
 	void writeCropResults(const std::vector<CropResult> &cropResults);
 	void writeAnalysisParameters(int width, int height);
 	void saveCompressedImage(const Mat &image);
+	double getEdgeScore(const Mat &image);     // score increases with quantity of sharp edges
 };
 
