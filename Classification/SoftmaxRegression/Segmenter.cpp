@@ -104,13 +104,16 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 	if (params.outputfolder != "dont_write_output")
 	{
 		cv::imwrite(params.outputfolder + "luv_im.jpg", luv_im);
-		cv::imwrite(params.outputfolder + "retrieved_shape.jpg", 255 * results.first);
-		cv::imwrite(params.outputfolder + "retrieved_letter.jpg", 255 * results.second);
+
+		if (!results.first.empty())
+			cv::imwrite(params.outputfolder + "retrieved_shape.jpg", 255 * results.first);
+		if (!results.second.empty())
+			cv::imwrite(params.outputfolder + "retrieved_letter.jpg", 255 * results.second);
 	}
 
 	cv::Mat mylabels_res = mylabels.reshape(0, test_im.rows);
 
-	return {255*results.first, 255*results.second};
+	return {255 * results.first, 255 * results.second};
 }
 
 

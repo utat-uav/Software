@@ -599,6 +599,7 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			ifile.close();
 
 			// call segmenter first
+			// segmentedImages[0] is shape, segmentedImages[1] is letter
 			Segmenter segm(imagePath);
 			vector<cv::Mat> segmentedImages = segm.segment();
 
@@ -607,6 +608,11 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			float finalConfidence = 0;
 			for (unsigned i = 0; i < segmentedImages.size(); ++i)
 			{
+				if (segmentedImages[i].empty())
+				{
+					continue;
+				}
+					
 				cv::imwrite(savePath + "\\label.jpg", segmentedImages[i]);
 				float confidence;
 				char c;
@@ -659,6 +665,11 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			float finalConfidence = 0;
 			for (unsigned i = 0; i < segmentedImages.size(); ++i)
 			{
+				if (segmentedImages[i].empty())
+				{
+					continue;
+				}
+
 				cv::imwrite(savePath + "\\label.jpg", segmentedImages[i]);
 				float confidence;
 				char c;
