@@ -136,12 +136,8 @@ int main(int argc, char** argv)
 		string outputFolder = argv[4];
 
 		string results;
-		//Identifier identifier(fileName, gpsLog, outputFolder, &results);
-		//identifier.analyze();
-		Segmenter segmenter(fileName);
-		std::vector<cv::Mat> ret = segmenter.segment();
-		cv::imwrite(outputFolder + "lol1.jpg", ret[0]);
-		cv::imwrite(outputFolder + "lol2.jpg", ret[1]);
+		Identifier identifier(fileName, gpsLog, outputFolder, &results);
+		identifier.analyze();
 	}
 	else if (mode == "-help")
 	{
