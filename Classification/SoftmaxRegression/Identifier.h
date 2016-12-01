@@ -50,6 +50,8 @@ private:
 	void writeCropResults(const std::vector<CropResult> &cropResults);
 	void writeAnalysisParameters(int width, int height);
 	void saveCompressedImage(const Mat &image);
-	double getEdgeScore(const Mat &image);     // score increases with quantity of sharp edges
+
+	// raw mserResults will take many slightly diff. bounding boxes of the same target
+	void removeDuplicates(std::vector<cv::Rect>& mserResults, const Mat &image);
 };
 

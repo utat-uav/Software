@@ -136,11 +136,8 @@ int main(int argc, char** argv)
 		string outputFolder = argv[4];
 
 		string results;
-		//Identifier identifier(fileName, gpsLog, outputFolder, &results);
-		//identifier.analyze();
-		
-		Segmenter test(fileName);
-		test.segment();
+		Identifier identifier(fileName, gpsLog, outputFolder, &results);
+		identifier.analyze();
 	}
 	else if (mode == "-help")
 	{

@@ -5,11 +5,7 @@
 Segmenter::Segmenter(std::string fileName, std::string outputFolder)
 {
 	params.imagePath = fileName;
-
-	if (outputFolder == "")
-		params.outputfolder = "C:\\uav-software\\segmenter_outputs\\";
-	else
-		params.outputfolder = outputFolder;
+	params.outputfolder = outputFolder;
 }
 
 Segmenter::~Segmenter()
@@ -18,7 +14,6 @@ Segmenter::~Segmenter()
 
 std::vector<cv::Mat> Segmenter::segment()
 {
-	cout << params.imagePath << endl;
 	return segment(params.imagePath);
 }
 
@@ -63,7 +58,9 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 	{
 		//multiply by 255 as all values from isolateLabel range from 0 - 1
 		mylabels_type.push_back(255 * isolateLabel(mylabels, test_im.rows, i));
-		cv::imwrite(params.outputfolder + "initial_label" + to_string(i) + ".jpg", mylabels_type[i]);
+
+		if (params.outputfolder != "dont_write_output")
+			cv::imwrite(params.outputfolder + "initial_label" + to_string(i) + ".jpg", mylabels_type[i]);
 	}
 
 	bool try_again = true;
@@ -92,7 +89,8 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 					masked.at<Vec3b>(i, j) = Vec3b(0, 0, 0);
 			}
 
-			cv::imwrite(params.outputfolder + "masked_im.jpg", masked);
+			if (params.outputfolder != "dont_write_output")
+				cv::imwrite(params.outputfolder + "masked_im.jpg", masked);
 
 			masked_res = masked.reshape(1, test_im.rows * test_im.cols);
 			masked_res.convertTo(masked_res, CV_32FC2);
@@ -103,13 +101,16 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 		}
 	}
 
-	cv::imwrite(params.outputfolder + "luv_im.jpg", luv_im);
-	cv::imwrite(params.outputfolder + "retrieved_shape.jpg", 255 * results.first);
-	cv::imwrite(params.outputfolder + "retrieved_letter.jpg", 255 * results.second);
+	if (params.outputfolder != "dont_write_output")
+	{
+		cv::imwrite(params.outputfolder + "luv_im.jpg", luv_im);
+		cv::imwrite(params.outputfolder + "retrieved_shape.jpg", 255 * results.first);
+		cv::imwrite(params.outputfolder + "retrieved_letter.jpg", 255 * results.second);
+	}
 
 	cv::Mat mylabels_res = mylabels.reshape(0, test_im.rows);
 
-	return mylabels_type;
+	return {255*results.first, 255*results.second};
 }
 
 
@@ -127,7 +128,6 @@ std::pair<cv::Mat, cv::Mat> Segmenter::analyzeLabels(cv::Mat labels, int num_row
 
 	for (int label = 0; label < 3; ++label)
 	{
-		int numblobs = 0;
 		analyzed_labels[label] = isolateLabel(labels, num_rows, label);
 		for (int i = 0; i < analyzed_labels[label].rows; ++i)
 		{
@@ -289,6 +289,8 @@ std::pair<int, int> Segmenter::floodFill(cv::Mat& canvas, int i, int j)
 
 void Segmenter::floodFill(cv::Mat& canvas, int& area, int& edge_touches, int i_seed, int j_seed, int fill_id)
 {
+	area = 0;
+	edge_touches = 0;
 	if (canvas.at<int>(i_seed, j_seed) != 1)
 		return;
 

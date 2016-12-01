@@ -6,7 +6,7 @@
 class Segmenter
 {
 public:
-	Segmenter(std::string fileName, std::string outputFolder = "");
+	Segmenter(std::string fileName, std::string outputFolder = "dont_write_output");
 	~Segmenter();
 
 	// uses default fileName
@@ -65,6 +65,7 @@ private:
 	// the bool indicates whether this shape may be a false positive
 	std::pair<cv::Mat, bool> retrieveLetter(cv::Mat& shape, int shape_area);
 
+	// convenience function: 
 	// flood fills into all pixels == 1, reporting (area, edge_touches) in return
 	// saves the flood fill result in Mat canvas by reference
 	std::pair<int, int> floodFill(cv::Mat& canvas, int i, int j);

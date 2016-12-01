@@ -85,67 +85,7 @@ void Identifier::analyze()
 		mserResults.insert(mserResults.end(), bboxes.begin(), bboxes.end());
 	}
 
-	// get the average bbox sidelength
-	double total = 0, avg = 0;
-	for (int i = 0; i < mserResults.size(); ++i)
-		total += sqrt(mserResults[i].area());
-
-	avg = total/mserResults.size();
-	
-	// filter mserResults, e.g boxes within boxes and other redundant bounds
-	double gridLength = min(3*avg , image.cols / 5);
-	int gridsPerRow = ceil(image.cols / gridLength);
-	int gridsPerCol = ceil(image.rows / gridLength);
-	std::unordered_map<int, std::pair<int, cv::Rect>> hashTable;
-	std::vector<int> occurenceCount(mserResults.size(), 0);
-
-	// use 4 differing grid offsets, we will only take elements that appear in all 4
-	for (int s = 0; s < 4; ++s)
-	{
-		// binary counter pattern for offsets, 00, 01, 10, 11
-		double xoffset = gridLength * 0.5 * (s % 2);
-		double yoffset = gridLength * 0.5 * (s >= 2);
-
-		for (int i = 0; i < mserResults.size(); ++i)
-		{
-			double centerX = mserResults[i].x + mserResults[i].width / 2;
-			double centerY = mserResults[i].y + mserResults[i].height / 2;
-		
-			// min x , y = 0
-			// max x , y = image.rows
-			// use extra precaution not to hash out of bounds
-			int xHash = min(floor((centerX + xoffset) / gridLength), gridsPerRow - 1);
-			int yHash = min(floor((centerY + yoffset) / gridLength), gridsPerCol - 1);
-			xHash = max(xHash, 0);
-			yHash = max(yHash, 0);
-			int hashIndex = yHash*gridsPerRow + xHash;
-			auto p = hashTable.find(hashIndex);
-
-			if (p == hashTable.end())
-			{
-				std::pair<int, cv::Rect> info = std::make_pair(i, mserResults[i]);
-				hashTable.insert(std::make_pair(hashIndex, info));
-			}
-			else if (p->second.second.area() < mserResults[i].area())
-				p->second = std::make_pair(i, mserResults[i]);
-		}
-
-		// increase counts, move on to next grid offset
-		for (auto it = hashTable.begin(); it != hashTable.end(); ++it)
-			++occurenceCount[it->second.first];
-		hashTable.clear();
-	}
-	
-	// not very efficient = O(n^2), but mserResults should be small anyways
-	int j = 0;
-	for (int i = 0; i < mserResults.size(); ++i)
-	{
-		if (occurenceCount[j++] < 4)
-		{
-			mserResults.erase(mserResults.begin() + i);
-			--i;
-		}
-	}
+	removeDuplicates(mserResults, image);
 
 	// Process mserResults
 	std::vector<CropResult> cropResults;
@@ -210,6 +150,72 @@ void Identifier::analyze()
 	//namedWindow("Debug", WINDOW_AUTOSIZE);
 	//imshow("Debug", image);
 	//waitKey(0);
+}
+
+
+void Identifier::removeDuplicates(std::vector<cv::Rect>& mserResults, const Mat &image)
+{
+	// get the average bbox sidelength
+	double total = 0, avg = 0;
+	for (int i = 0; i < mserResults.size(); ++i)
+		total += sqrt(mserResults[i].area());
+
+	avg = total / mserResults.size();
+
+	// filter mserResults, e.g boxes within boxes and other redundant bounds
+	double gridLength = min(3 * avg, image.cols / 5);
+	int gridsPerRow = ceil(image.cols / gridLength);
+	int gridsPerCol = ceil(image.rows / gridLength);
+	std::unordered_map<int, std::pair<int, cv::Rect>> hashTable;
+	std::vector<int> occurenceCount(mserResults.size(), 0);
+
+	// use 4 differing grid offsets, we will only take elements that appear in all 4
+	for (int s = 0; s < 4; ++s)
+	{
+		// binary counter pattern for offsets, 00, 01, 10, 11
+		double xoffset = gridLength * 0.5 * (s % 2);
+		double yoffset = gridLength * 0.5 * (s >= 2);
+
+		for (int i = 0; i < mserResults.size(); ++i)
+		{
+			double centerX = mserResults[i].x + mserResults[i].width / 2;
+			double centerY = mserResults[i].y + mserResults[i].height / 2;
+
+			// min x , y = 0
+			// max x , y = image.rows
+			// use extra precaution not to hash out of bounds
+			int xHash = min(floor((centerX + xoffset) / gridLength), gridsPerRow - 1);
+			int yHash = min(floor((centerY + yoffset) / gridLength), gridsPerCol - 1);
+			xHash = max(xHash, 0);
+			yHash = max(yHash, 0);
+			int hashIndex = yHash*gridsPerRow + xHash;
+			auto p = hashTable.find(hashIndex);
+
+			if (p == hashTable.end())
+			{
+				std::pair<int, cv::Rect> info = std::make_pair(i, mserResults[i]);
+				hashTable.insert(std::make_pair(hashIndex, info));
+			}
+			else if (p->second.second.area() < mserResults[i].area())
+				p->second = std::make_pair(i, mserResults[i]);
+		}
+
+		// increase counts, move on to next grid offset
+		for (auto it = hashTable.begin(); it != hashTable.end(); ++it)
+			++occurenceCount[it->second.first];
+		hashTable.clear();
+	}
+
+	// not very efficient = O(n^2), but mserResults should be small anyways
+	int j = 0;
+	for (int i = 0; i < mserResults.size(); ++i)
+	{
+		if (occurenceCount[j++] < 4)
+		{
+			mserResults.erase(mserResults.begin() + i);
+			--i;
+		}
+	}
 }
 
 void Identifier::readGPSLog()
