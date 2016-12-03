@@ -606,10 +606,16 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			string savePath = programPath.substr(0, programPath.find_last_of('\\'));
 			char finalChar = '0';
 			float finalConfidence = 0;
+			bool falsePositiveNoted = false;
 			for (unsigned i = 0; i < segmentedImages.size(); ++i)
 			{
 				if (segmentedImages[i].empty())
 				{
+					if (!falsePositiveNoted)
+					{
+						falsePositiveNoted = true;
+						cout << "Likely a false positive ..." << endl;
+					}
 					continue;
 				}
 					
@@ -663,10 +669,16 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			string savePath = programPath.substr(0, programPath.find_last_of('\\'));
 			char finalChar = '0';
 			float finalConfidence = 0;
+			bool falsePositiveNoted = false;
 			for (unsigned i = 0; i < segmentedImages.size(); ++i)
 			{
 				if (segmentedImages[i].empty())
 				{
+					if (!falsePositiveNoted)
+					{
+						falsePositiveNoted = true;
+						cout << "Likely a false positive ..." << endl;
+					}
 					continue;
 				}
 
