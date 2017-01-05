@@ -1,5 +1,7 @@
 
-#include "Geolocation.h"
+#include "geolocation.h"
+#include "gpsdata.h"
+#include "latlon.h"
 #include <math.h>
 #include <iostream>
 
@@ -10,30 +12,37 @@
 /**
  * @brief Simple Constructor.
  *
- * @param[in] altitude Altitude of plane (in any unit).
  * @param[in] FOV_x Field of view along x-axis of camera (degrees).
  * @param[in] FOV_y Field of view along y-axis of camera (degrees).
  * @param[in] width Width of camera (pixels).
  * @param[in] height Height of camera (pixels).
- * @param[in] roll Roll angle of plane (degrees) (rotation around y-axis of camera).
- * @param[in] pitch Pitch angle of plane (degrees) (rotation around x-axis of camera).
- * @param[in] yaw Yaw angle of plane (degrees) (rotation around z-axis of camera)
+ * @param[in] gpsData GPSData containing information on yaw, pitch, roll, latitude, longitude and altitude
  */
-Geolocation::Geolocation(double altitude, double FOV_x, double FOV_y, int width, int height, double roll, double pitch, double yaw) {
-    if (roll > 45) {
+Geolocation::Geolocation(double FOV_x, double FOV_y, int width, int height, GPSData gpsData) {
+
+    this->altitude = gpsData.getAltitude();
+    this->FOV_x = FOV_x * PI / 180.;
+    this->FOV_y = FOV_y * PI / 180.;
+    this->width = width;
+    this->height = height;
+    this->roll = gpsData.getRoll() * PI / 180.;
+    this->pitch = gpsData.getPitch() * PI / 180.;
+    this->yaw = gpsData.getYaw() * PI / 180.;
+
+    if (this.roll > PI/4) {
         std::cout << "Warning: Don't bother with roll > 45 degrees" << std::endl;
-        roll = 45;
+        this.roll = PI/4;
     }
-    else if (roll < -45) {
+    else if (this.roll < -PI/4) {
         std::cout << "Warning: Don't bother with roll < -45 degrees" << std::endl;
-        roll = -45;
+        this.roll = -PI/4;
     }
-    if (pitch > 45) {
+    if (this.pitch > PI/4) {
         std::cout << "Warning: Don't bother with pitch > 45 degrees" << std::endl;
-        pitch = 45;
+        this.pitch = PI/4;
     }
-    else if (pitch < -45) {
-        pitch = -45;
+    else if (this.pitch < -PI/4) {
+        this.pitch = -PI/4;
         std::cout << "Warning: Don't bother with pitch < -45 degrees" << std::endl;
     }
     if (FOV_x > 60) {
@@ -65,14 +74,6 @@ Geolocation::Geolocation(double altitude, double FOV_x, double FOV_y, int width,
         altitude = 1;
     }
 
-    this->altitude = altitude;
-    this->FOV_x = FOV_x * PI / 180.;
-    this->FOV_y = FOV_y * PI / 180.;
-    this->width = width;
-    this->height = height;
-    this->roll = roll * PI / 180.;
-    this->pitch = pitch * PI / 180.;
-    this->yaw = yaw * PI / 180.;
 }
 
 /**
@@ -130,6 +131,25 @@ void Geolocation::calcDistance(int x, int y, double& east, double& north) {
     double multiple = 0-altitude/u[2];
     east = multiple * u[0];
     north = multiple * u[1];
+}
+
+/**
+ * @brief Returns the location of a pixel
+ *
+ * Calculates and returns the location of a pixel from the GPS data and coordinates
+ *
+ * @param[in] x coordinate of pixel.
+ * @param[in] y coordinate of pixel.
+ */
+
+LatLon Geolocation::pixelToLocation(int x, int y){
+    double* east, north;
+    double lat, lon;
+    calcDistance(x, y, east, north);
+    lat = this.longitude + *east;
+    lon = this.latitude + *north;
+    LatLon location = new LatLon(lat, lon);
+    return location;
 }
 
 /**

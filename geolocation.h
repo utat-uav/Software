@@ -1,16 +1,22 @@
+#include "gpsdata.h"
+#include "latlon.h"
+
 #ifndef GEOLOCATION_H
 #define GEOLOCATION_H
+
 
 #pragma once
 
 class Geolocation {
   public:
-    Geolocation(double altitude, double FOV_x, double FOV_y, int width, int height, double roll, double pitch, double yaw);
+    Geolocation(double FOV_x, double FOV_y, int width, int height, GPSData gpsData);
     ~Geolocation();
+    LatLon pixelToLocation(int x, int y);
 
-    void calcDistance(int x, int y, double& east, double& north);
+    
 
   private:
+    void calcDistance(int x, int y, double& east, double& north);
     void rotateAbout(const double axis[4], double theta, double inout[4]);
     void rotateX(double u[3], double theta);
     void rotateY(double u[3], double theta);
