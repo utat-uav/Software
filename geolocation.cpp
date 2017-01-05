@@ -1,3 +1,4 @@
+
 #include "Geolocation.h"
 #include <math.h>
 #include <iostream>
@@ -264,4 +265,5 @@ double Geolocation::findAngle(int x, int width, double FOV) {
  */
 void Geolocation::printVector(const double u[3]) {
     std::cout << "X: " << u[0] << " Y: " << u[1] << " Z: " << u[2] << std::endl;
+
 }

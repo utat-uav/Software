@@ -1,7 +1,6 @@
 #ifndef GEOLOCATION_H
 #define GEOLOCATION_H
 
-
 #pragma once
 
 class Geolocation {
@@ -25,3 +24,4 @@ class Geolocation {
 
     static void printVector(const double u[3]);
 };
+

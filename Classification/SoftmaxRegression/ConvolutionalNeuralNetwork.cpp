@@ -599,14 +599,26 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			ifile.close();
 
 			// call segmenter first
-			Segmenter segm;
-			vector<cv::Mat> segmentedImages = segm.segment(imagePath);
+			// segmentedImages[0] is shape, segmentedImages[1] is letter
+			Segmenter segm(imagePath);
+			vector<cv::Mat> segmentedImages = segm.segment();
 
 			string savePath = programPath.substr(0, programPath.find_last_of('\\'));
 			char finalChar = '0';
 			float finalConfidence = 0;
+			bool falsePositiveNoted = false;
 			for (unsigned i = 0; i < segmentedImages.size(); ++i)
 			{
+				if (segmentedImages[i].empty())
+				{
+					if (!falsePositiveNoted)
+					{
+						falsePositiveNoted = true;
+						cout << "Likely a false positive ..." << endl;
+					}
+					continue;
+				}
+					
 				cv::imwrite(savePath + "\\label.jpg", segmentedImages[i]);
 				float confidence;
 				char c;
@@ -651,14 +663,25 @@ void ConvolutionalNeuralNetwork::startCMDInput()
 			ifile.close();
 
 			// call segmenter first
-			Segmenter segm;
-			vector<cv::Mat> segmentedImages = segm.segment(imagePath);
+			Segmenter segm(imagePath);
+			vector<cv::Mat> segmentedImages = segm.segment();
 
 			string savePath = programPath.substr(0, programPath.find_last_of('\\'));
 			char finalChar = '0';
 			float finalConfidence = 0;
+			bool falsePositiveNoted = false;
 			for (unsigned i = 0; i < segmentedImages.size(); ++i)
 			{
+				if (segmentedImages[i].empty())
+				{
+					if (!falsePositiveNoted)
+					{
+						falsePositiveNoted = true;
+						cout << "Likely a false positive ..." << endl;
+					}
+					continue;
+				}
+
 				cv::imwrite(savePath + "\\label.jpg", segmentedImages[i]);
 				float confidence;
 				char c;
