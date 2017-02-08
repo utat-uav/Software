@@ -1,7 +1,6 @@
 #include "gpsdata.h"
 #include "latlon.h"
 
-#ifndef GEOLOCATION_H
 #define GEOLOCATION_H
 
 
@@ -16,7 +15,7 @@ class Geolocation {
     
 
   private:
-    void calcDistance(int x, int y, double& east, double& north);
+    void calcDistance(int x, int y, double* east, double* north);
     void rotateAbout(const double axis[4], double theta, double inout[4]);
     void rotateX(double u[3], double theta);
     void rotateY(double u[3], double theta);
@@ -25,7 +24,7 @@ class Geolocation {
     // no longer in commission
     double findXoverZ(int x, int width, double FOV, double tilt);
 
-    double altitude, FOV_x, FOV_y, roll, pitch, yaw;
+    double altitude, latitude, longitude, FOV_x, FOV_y, roll, pitch, yaw;
     int width, height;
 
     static void printVector(const double u[3]);

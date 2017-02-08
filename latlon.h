@@ -6,10 +6,11 @@ class LatLon
 {
 public:
     LatLon();
+    LatLon(double lat, double lon);
     double getLat();
     double getLon();
-    void setLat();
-    void setLon();
+    void setLat(double lat);
+    void setLon(double lon);
 private:
 	double latitude;
 	double longitude;

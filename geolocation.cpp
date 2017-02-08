@@ -21,6 +21,8 @@
 Geolocation::Geolocation(double FOV_x, double FOV_y, int width, int height, GPSData gpsData) {
 
     this->altitude = gpsData.getAltitude();
+    this->latitude = gpsData.getLatitude();
+    this->longitude = gpsData.getLongitude();
     this->FOV_x = FOV_x * PI / 180.;
     this->FOV_y = FOV_y * PI / 180.;
     this->width = width;
@@ -29,20 +31,20 @@ Geolocation::Geolocation(double FOV_x, double FOV_y, int width, int height, GPSD
     this->pitch = gpsData.getPitch() * PI / 180.;
     this->yaw = gpsData.getYaw() * PI / 180.;
 
-    if (this.roll > PI/4) {
+    if (this->roll > PI/4) {
         std::cout << "Warning: Don't bother with roll > 45 degrees" << std::endl;
-        this.roll = PI/4;
+        this->roll = PI/4;
     }
-    else if (this.roll < -PI/4) {
+    else if (this->roll < -PI/4) {
         std::cout << "Warning: Don't bother with roll < -45 degrees" << std::endl;
-        this.roll = -PI/4;
+        this->roll = -PI/4;
     }
-    if (this.pitch > PI/4) {
+    if (this->pitch > PI/4) {
         std::cout << "Warning: Don't bother with pitch > 45 degrees" << std::endl;
-        this.pitch = PI/4;
+        this->pitch = PI/4;
     }
-    else if (this.pitch < -PI/4) {
-        this.pitch = -PI/4;
+    else if (this->pitch < -PI/4) {
+        this->pitch = -PI/4;
         std::cout << "Warning: Don't bother with pitch < -45 degrees" << std::endl;
     }
     if (FOV_x > 60) {
@@ -94,7 +96,7 @@ Geolocation::~Geolocation(){
  * @param[out] east The distance east of the camera location (same units as altitude).
  * @param[out] north The distance north of the camera location (same units as altitude).
  */
-void Geolocation::calcDistance(int x, int y, double& east, double& north) {
+void Geolocation::calcDistance(int x, int y, double* east, double* north) {
 
     // define a unit vectors for X Y and Z
     double ux[4] = {1., 0., 0., 1.};
@@ -129,8 +131,9 @@ void Geolocation::calcDistance(int x, int y, double& east, double& north) {
     u[2] += factor * uy[2];
 
     double multiple = 0-altitude/u[2];
-    east = multiple * u[0];
-    north = multiple * u[1];
+    *east = multiple * u[0];
+    *north = multiple * u[1];
+
 }
 
 /**
@@ -143,12 +146,12 @@ void Geolocation::calcDistance(int x, int y, double& east, double& north) {
  */
 
 LatLon Geolocation::pixelToLocation(int x, int y){
-    double* east, north;
+    double east, north;
     double lat, lon;
-    calcDistance(x, y, east, north);
-    lat = this.longitude + *east;
-    lon = this.latitude + *north;
-    LatLon location = new LatLon(lat, lon);
+    calcDistance(x, y, &east, &north);
+    lat = this->longitude + east/111302.61697430261; //meters to longitude degrees
+    lon = this->latitude - north/110574.61087757687; //meters to latitude degrees
+    LatLon location = *(new LatLon(lat, lon));
     return location;
 }
 
