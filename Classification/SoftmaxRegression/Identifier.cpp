@@ -41,7 +41,10 @@ Identifier::~Identifier()
 void Identifier::analyze()
 {
 	// Read from gps log
-	//readGPSLog();
+	if (params.gpsLog != "")
+	{
+		readGPSLog();
+	}
 
 	// Get image
 	cv::Mat image = imread(params.imagePath, CV_LOAD_IMAGE_COLOR);   // Read the file;
@@ -231,6 +234,7 @@ void Identifier::readGPSLog()
 	std::ifstream file(params.gpsLog);
 	
 	bool firstLine = true;
+	bool imgFound = false;
 
 	if (file.is_open())
 	{
@@ -259,6 +263,8 @@ void Identifier::readGPSLog()
 			// Image name, latitude, longitude, altitude, heading
 			if (splitLine.size() >= 5 && splitLine[0] == params.imageName)
 			{
+				imgFound = true;
+
 				latitude = std::stod(splitLine[1]);
 				latitudeString = splitLine[1];
 
@@ -282,11 +288,14 @@ void Identifier::readGPSLog()
 		file.close();
 	}
 
-	results->append("heading=" + headingEnglishString + "\n");
-	results->append("headingDegrees=" + headingString + "\n");
-	results->append("latitude=" + latitudeString + "\n");
-	results->append("longitude=" + longitudeString + "\n");
-	results->append("altitude=" + altitudeString + "\n");
+	if (imgFound)
+	{
+		results->append("heading=" + headingEnglishString + "\n");
+		results->append("headingDegrees=" + headingString + "\n");
+		results->append("latitude=" + latitudeString + "\n");
+		results->append("longitude=" + longitudeString + "\n");
+		results->append("altitude=" + altitudeString + "\n");
+	}
 }
 
 std::string Identifier::headingToEnglish(double headingDegrees)

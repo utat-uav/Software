@@ -108,7 +108,7 @@ private:
     int rowCount;
     int colCount;
     bool noTabs; //if no images are open or if all of them are closed
-    bool loading;
+    std::atomic<bool> loading;
 };
 
 #endif // MAINWINDOW_H

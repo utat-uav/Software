@@ -248,10 +248,10 @@ void MainWindow::refreshTable()
         }
     }
 
-    qDebug() << "Done refreshing";
-
     // Take care of memory
     delete itemsCopy;
+
+    qDebug() << "Done refreshing";
 }
 
 QList<ImageWidget*>* MainWindow::getItems()
@@ -305,14 +305,16 @@ void MainWindow::on_loadButton_clicked()
     // Create and connect thread
     MainWindowLoader* loader = new MainWindowLoader(this, dir);
     connect(loader, &MainWindowLoader::finished, loader, &QObject::deleteLater);
-    connect(loader, &MainWindowLoader::destroyed, [=](){
+    connect(loader, &MainWindowLoader::destroyed, this, [=](){
         loadingBarDialog->hide();
         refreshTable();
         loading = false;
     });
-    connect(loader, &MainWindowLoader::statusUpdate, [=](int value){
+    connect(loader, &MainWindowLoader::statusUpdate, this, [=](int value){
         if (loadingBarDialog)
+        {
             loadingBarDialog->setPercent((double)value/fileList.size()*100.0);
+        }
     });
     loading = true;
 

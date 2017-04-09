@@ -139,6 +139,33 @@ int main(int argc, char** argv)
 		Identifier identifier(fileName, gpsLog, outputFolder, &results);
 		identifier.analyze();
 	}
+	else if (mode == "-segment")
+	{
+		if (argc < 3)
+		{
+			cout << "Insufficient arguments. Exiting program..." << endl;
+			return -1;
+		}
+
+		string fileName = argv[2];
+
+		Segmenter segm(fileName);
+		vector<cv::Mat> segmentedImages = segm.segment();
+
+		int i = 0;
+		for (vector<cv::Mat>::iterator it = segmentedImages.begin(); it != segmentedImages.end(); ++it)
+		{
+			++i;
+			std::ostringstream stringStream;
+			stringStream << "Image " << i;
+			std::string copyOfStr = stringStream.str();
+			cv::imshow(copyOfStr, *it);
+		}
+		if (i > 0)
+		{
+			cv::waitKey(0);
+		}
+	}
 	else if (mode == "-help")
 	{
 		cout << "Press enter to continue..." << endl;
@@ -249,6 +276,7 @@ void credits()
 	cout << "                   [-cnn <serializedNN>] to run pre-trained program" << endl;
 	cout << "                   [-s <dataset>] to serialize dataset" << endl;
 	cout << "                   [-zbar <imagepath>] to read barcode" << endl;
+	cout << "                   [-segment <imagepath>] to run the segmenter" << endl;
 	cout << "                   [-identify <imagepath> <gpsLog> <outputFolder>] to identify and crop" << endl;
 	cout << "                   [-help me] for help" << endl;
 	cout << endl;
