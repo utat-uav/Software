@@ -159,7 +159,7 @@ int main(int argc, char** argv)
 			std::ostringstream stringStream;
 			stringStream << "Image " << i;
 			std::string copyOfStr = stringStream.str();
-			cv::imshow(copyOfStr, *it);
+			cv::imshow(copyOfStr, (*it)*255);
 		}
 		if (i > 0)
 		{

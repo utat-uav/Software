@@ -5,6 +5,7 @@
 #include "targetlistitem.h"
 #include <QProcess>
 #include <QSettings>
+#include <atomic>
 #include "lifesupport.h"
 
 namespace Ui {
@@ -25,9 +26,9 @@ private slots:
 
     void on_classifyButton_pressed();
 
-    void on_zbar_clicked();
-
     void on_classifyWithRotation_clicked();
+
+    void closeEvent(QCloseEvent *event);
 
 private:
     void classify() ;
@@ -35,6 +36,8 @@ private:
     LifeSupport* dataPackage;
     Ui::TargetWindow *ui;
     TargetListItem *targetListItem;
+
+    std::atomic<bool> processing;
 };
 
 #endif // TARGETWINDOW_H

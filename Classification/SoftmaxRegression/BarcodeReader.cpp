@@ -32,10 +32,18 @@ void BarcodeReader::scanImage(string imagePath)
 	int output = scanner.scan(zImage);
 
 	// Extract results
-	for (Image::SymbolIterator symbol = zImage.symbol_begin(); symbol != zImage.symbol_end(); ++symbol) {
+	int numResults = 0;
+	for (Image::SymbolIterator symbol = zImage.symbol_begin(); symbol != zImage.symbol_end(); ++symbol)
+	{
 		// do something useful with results
 		cout << symbol->get_type_name()
 			<< " result \"" << symbol->get_data() << '"' << endl;
+		++numResults;
+	}
+
+	if (numResults == 0)
+	{
+		cout << "Invalid barcode" << endl;
 	}
 
 	// Clean up
