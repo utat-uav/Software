@@ -501,7 +501,6 @@ void MainWindow::on_actionOnly_images_with_targets_triggered()
 
     if (viewOnlyImagesWithTargets)
     {
-        itemsNotDisplayed.clear();
         for (int i = items.size() - 1; i >= 0; --i)
         {
             if (items[i]->getNumTargets() == 0)
