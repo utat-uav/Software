@@ -209,17 +209,17 @@ void ImageWidget::mouseDoubleClickEvent(QMouseEvent *event){
 
 void ImageWidget::on_pinButton_clicked()
 {
-    QList<ImageWidget*>* itemsList = mainWindow->getItems();
+    QList<ImageWidget*>& itemsList = mainWindow->getItems();
 
-    for (int i = 0; i < itemsList->size(); ++i)
+    for (int i = 0; i < itemsList.size(); ++i)
     {
-        if (itemsList->at(i) == this) {
-            itemsList->removeAt(i);
+        if (itemsList[i] == this) {
+            itemsList.removeAt(i);
             break;
         }
     }
 
-    itemsList->insert(0, this);
+    itemsList.insert(0, this);
 
     mainWindow->refreshTable();
 }

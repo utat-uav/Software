@@ -20,7 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Initializes variables
     cellWidth = 0;
     rowCount = 0;
-    items = new QList<ImageWidget*>;
     ui->tabWidget->removeTab(1);
     ui->tabWidget->removeTab(0);
     noTabs = true ;
@@ -122,12 +121,11 @@ MainWindow::~MainWindow()
     classifier->close();
     classifier->terminate();
 
-    foreach (const auto &item, *items)
+    foreach (const auto &item, items)
     {
         delete item;
     }
 
-    delete items;
     delete ui;
     delete classifier;
     delete completer;
@@ -190,32 +188,33 @@ void MainWindow::refreshTable()
 
     // Makes copy of the items
     QList<ImageWidget *> *itemsCopy = new QList<ImageWidget *>;
-    for (int i = 0; i < items->size(); i++) {
+    for (int i = 0; i < items.size(); i++)
+    {
         ImageWidget *temp = new ImageWidget(dataPackage, this, false);
         // Copy all information over
-        temp->setTitle(items->at(i)->getTitle());
-        temp->setFilePath(items->at(i)->getFilePath());
-        temp->setFolderPath(items->at(i)->getFolderPath());
-        temp->setImagePath(items->at(i)->getImagePath());
-        temp->setImage(items->at(i)->getImage());
-        temp->setNumTargets(items->at(i)->getNumTargets());
-        temp->setSeen(items->at(i)->getSeen());
+        temp->setTitle(items[i]->getTitle());
+        temp->setFilePath(items[i]->getFilePath());
+        temp->setFolderPath(items[i]->getFolderPath());
+        temp->setImagePath(items[i]->getImagePath());
+        temp->setImage(items[i]->getImage());
+        temp->setNumTargets(items[i]->getNumTargets());
+        temp->setSeen(items[i]->getSeen());
 
         // Preserve the old targetList window
         temp->deleteTargetListWindow();
-        temp->changeTargetListWindow(items->at(i)->getTargetList(), items->at(i)->isInitialized());
-        items->at(i)->changeTargetListWindow(NULL);
+        temp->changeTargetListWindow(items[i]->getTargetList(), items[i]->isInitialized());
+        items[i]->changeTargetListWindow(NULL);
 
         itemsCopy->append(temp);
-        (items->at(i))->finishLoading();
-        delete &*(items->at(i));
+        (items[i])->finishLoading();
+        delete &*(items[i]);
     }
 
     // Clears table
     ui->photoListTable->clear();
 
     // Recalculates rowCount
-    rowCount = ceil((double) items->size() / (double) colCount);
+    rowCount = ceil((double) items.size() / (double) colCount);
     ui->photoListTable->setRowCount(rowCount);
 
     // Calculate max col number on the last row
@@ -223,25 +222,30 @@ void MainWindow::refreshTable()
 
     // Sets new table contents
     int itemCount = 0;
-    for (int r = 0; r < rowCount; r++) {
-
-        for (int c = 0; c < colCount; c++) {
-            if (!(r == rowCount-1 && c == cMax)) { // ends if the end of the list is hit
-                items->replace(itemCount, itemsCopy->at(itemCount));
+    for (int r = 0; r < rowCount; r++)
+    {
+        for (int c = 0; c < colCount; c++)
+        {
+            if (!(r == rowCount-1 && c == cMax))
+            { // ends if the end of the list is hit
+                items.replace(itemCount, itemsCopy->at(itemCount));
 
                 // Sets the widget
-                ui->photoListTable->setCellWidget(r, c, items->at(itemCount));
+                ui->photoListTable->setCellWidget(r, c, items[itemCount]);
 
                 itemCount++;
             }
-            else{
+            else
+            {
                 break;
             }
         }
 
         // Disables extra spaces
-        if (r == rowCount-1) {
-            for (int c = cMax; c < colCount; c++) {
+        if (r == rowCount-1)
+        {
+            for (int c = cMax; c < colCount; c++)
+            {
                 ui->photoListTable->setItem(r, c, new QTableWidgetItem());
                 ui->photoListTable->item(r, c)->setFlags(Qt::ItemIsSelectable);
             }
@@ -254,7 +258,7 @@ void MainWindow::refreshTable()
     qDebug() << "Done refreshing";
 }
 
-QList<ImageWidget*>* MainWindow::getItems()
+QList<ImageWidget*>& MainWindow::getItems()
 {
     return this->items;
 }
@@ -268,7 +272,7 @@ void MainWindow::appendItem(QString folderPath, QString filePath, QString imageP
     newWidget->setFilePath(filePath);
     newWidget->setFolderPath(folderPath);
     newWidget->setNumTargets(numTargets);
-    items->append(newWidget);
+    items.append(newWidget);
 }
 
 void MainWindow::indexToCoordinates(int index, int *r, int *c)
@@ -378,8 +382,8 @@ void MainWindow::on_editButton_clicked()
         editDialog->setWindowTitle("Edit");
 
         // Sets initial information
-        editDialog->setTitle(items->at(selectedIndex)->getTitle());
-        editDialog->setFilePath(items->at(selectedIndex)->getImagePath());
+        editDialog->setTitle(items[selectedIndex]->getTitle());
+        editDialog->setFilePath(items[selectedIndex]->getImagePath());
 
         // Starts the dialog
         editDialog->exec();
@@ -391,8 +395,8 @@ void MainWindow::on_editButton_clicked()
             QString filePath = editDialog->getFilePath();
 
             // Sets item information
-            items->at(selectedIndex)->setTitle(title);
-            items->at(selectedIndex)->setImage(filePath);
+            items[selectedIndex]->setTitle(title);
+            items[selectedIndex]->setImage(filePath);
         }
 
         delete editDialog;
@@ -417,7 +421,7 @@ void MainWindow::on_deleteItemButton_clicked()
         // Deletes items in the table
         for (int i = 0; i < deletionOrder.length(); i++) {
             int index = deletionOrder.at(i);
-            items->removeAt(index);
+            items.removeAt(index);
         }
 
         // Clears selection
@@ -489,4 +493,40 @@ void MainWindow::on_actionProcess_Image_Set_triggered()
     processor->exec();
 
     delete processor;
+}
+
+void MainWindow::on_actionOnly_images_with_targets_triggered()
+{
+    bool viewOnlyImagesWithTargets = ui->actionOnly_images_with_targets->isChecked();
+
+    if (viewOnlyImagesWithTargets)
+    {
+        itemsNotDisplayed.clear();
+        for (int i = items.size() - 1; i >= 0; --i)
+        {
+            if (items[i]->getNumTargets() == 0)
+            {
+                ImageWidget *cpy = new ImageWidget(dataPackage, this, false);
+                // Copy all information over
+                cpy->setTitle(items[i]->getTitle());
+                cpy->setFilePath(items[i]->getFilePath());
+                cpy->setFolderPath(items[i]->getFolderPath());
+                cpy->setImagePath(items[i]->getImagePath());
+                cpy->setImage(items[i]->getImage());
+                cpy->setNumTargets(items[i]->getNumTargets());
+                cpy->setSeen(items[i]->getSeen());
+
+                itemsNotDisplayed.prepend(cpy);
+                items.removeAt(i);
+            }
+        }
+    }
+    else
+    {
+        items.append(itemsNotDisplayed);
+        itemsNotDisplayed.clear();
+    }
+
+    // Will destroy everything removed from the table
+    refreshTable();
 }

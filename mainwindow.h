@@ -55,7 +55,7 @@ public:
     void addTab(QWidget* newTab, QString title);
     bool findTab (QWidget* tab);
     void refreshTable();
-    QList<ImageWidget*>* getItems();
+    QList<ImageWidget*>& getItems();
     ~MainWindow();
     LoadingBarDialog* loadingBarDialog;
 
@@ -84,6 +84,8 @@ private slots:
 
     void on_actionProcess_Image_Set_triggered();
 
+    void on_actionOnly_images_with_targets_triggered();
+
 protected:
     void resizeEvent(QResizeEvent *e);
     void resizeTable();
@@ -96,7 +98,8 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    QList<ImageWidget *> *items;
+    QList<ImageWidget *> items;
+    QList<ImageWidget *> itemsNotDisplayed;
     LifeSupport* dataPackage;
     QProcess *classifier;
     QCompleter *completer;

@@ -130,7 +130,14 @@
     </property>
     <addaction name="actionProcess_Image_Set"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionOnly_images_with_targets"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="dockWidget_2">
@@ -221,6 +228,14 @@
   <action name="actionProcess_Image_Set">
    <property name="text">
     <string>Process Image Set</string>
+   </property>
+  </action>
+  <action name="actionOnly_images_with_targets">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Only images with targets</string>
    </property>
   </action>
  </widget>
