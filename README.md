@@ -20,7 +20,7 @@ https://drive.google.com/file/d/0B18NSvy37OQ4OXl0SzRRNHo4NFU/view?usp=sharing
   ```
   git clone https://github.com/utat-uav/Software.git
   ```
-6. Download these missing files (libraries) and put them in the Classification folders: https://www.mediafire.com/?kc2rmmr3hlcqh4p
+6. Download these missing files (libraries) and put them in the Classification folders: https://drive.google.com/drive/folders/0B18NSvy37OQ4a0dTeUF3UWE3RFE?usp=sharing
 7. Open the Software/Classification/SoftmaxRegression.sln file in Visual Studio 2013
   * Configure the project for 32 bit (x86) in release mode
   * Make sure the compiler kit is correct
