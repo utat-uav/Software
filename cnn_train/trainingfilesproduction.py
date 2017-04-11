@@ -2,7 +2,6 @@ import os
 import cv2
 import math
 import numpy as np
-import thread
 import time
 
 '''
@@ -28,8 +27,8 @@ def rotate_image(image, angle):
     image_center = (diagonal/2, diagonal/2)
 
     R = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-    dst_image[offset_x:(offset_x + image.shape[0]), \
-            offset_y:(offset_y + image.shape[1]), \
+    dst_image[int(offset_x):int(offset_x + image.shape[0]),\
+            int(offset_y):int(offset_y + image.shape[1]),\
             :] = image
     dst_image = cv2.warpAffine(dst_image, R, (diagonal, diagonal), flags=cv2.INTER_LINEAR)
 
@@ -91,9 +90,9 @@ def getRotationsPlusMinus(angle, image):
     return (rotated1, rotated2, rotated3)
 
 # Script parameters
-directory = "/homes/w/wusihan1/Desktop/UAV/Other/FontDatabase/English/Fnt"
+directory = "D:/Workspace/UAV/Software/cnn_train/FontDatabase/English/Fnt"
 # outputDirectory
-outputDirectory = "/homes/w/wusihan1/Desktop/UAV/Other/processedFontDB"
+outputDirectory = "D:/Workspace/UAV/Software/cnn_train/ProcessedFonts"
 
 # Stores the existing classes
 D = {}
@@ -139,7 +138,7 @@ D["035"] = "Y"
 D["036"] = "Z"
 
 # Inverted mapping
-charToIndex = {v : (int(k)-1) for k, v in D.iteritems()}
+charToIndex = {v : (int(k)-1) for k, v in D.items()} # iteritems() in python 2.x
 
 print(charToIndex)
 

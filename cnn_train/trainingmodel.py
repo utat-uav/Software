@@ -2,7 +2,6 @@ import os
 import cv2
 import math
 import numpy as np
-import thread
 import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
