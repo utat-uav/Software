@@ -6,6 +6,9 @@ http://www.mediafire.com/download/29wqk8fr8h5n8qf/CVInterfacePics.zip
 Previous AUVSI data:
 https://drive.google.com/drive/folders/0B7ik7oGEZVhMNkFvalBTeFZxcjA
 
+Trusted font database:
+https://drive.google.com/file/d/0B18NSvy37OQ4OXl0SzRRNHo4NFU/view?usp=sharing
+
 # Instructions
 
 1. Download & install git scm: https://git-scm.com/downloads
