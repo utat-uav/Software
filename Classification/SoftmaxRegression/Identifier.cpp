@@ -2,6 +2,7 @@
 #include "Identifier.h"
 
 
+
 Identifier::Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, ::string *results)
 	: results(results)
 {
@@ -41,10 +42,7 @@ Identifier::~Identifier()
 void Identifier::analyze()
 {
 	// Read from gps log
-	if (params.gpsLog != "")
-	{
-		readGPSLog();
-	}
+	readGPSLog();
 
 	// Get image
 	cv::Mat image = imread(params.imagePath, CV_LOAD_IMAGE_COLOR);   // Read the file;
@@ -56,13 +54,13 @@ void Identifier::analyze()
 	height = image.rows;
 	channels = image.channels();
 
+	// update geolocation params
+	geolocater.updateParams(width, height, params.heading, params.altitude, LatLon(params.latitude, params.longitude));
 	writeAnalysisParameters(width, height);
 
-	// Get hsv
+	// Get hsv, apply blur
 	cv::Mat hsvImage;
 	cv::cvtColor(image, hsvImage, cv::COLOR_RGB2HSV);
-
-	// Apply blur
 	cv::blur(hsvImage, hsvImage, cv::Size(6, 6));
 
 	// Create MSER
@@ -75,16 +73,13 @@ void Identifier::analyze()
 	cv::Mat hsv[3];
 	cv::split(hsvImage, hsv);
 
-
 	// Run MSER on each channel
 	std::vector<cv::Rect> mserResults;
 	for (int i = 0; i < 3; ++i)
 	{
 		std::vector<std::vector<cv::Point>> msers;
 		std::vector<cv::Rect> bboxes;
-
 		mser->detectRegions(hsv[i], msers, bboxes);
-
 		mserResults.insert(mserResults.end(), bboxes.begin(), bboxes.end());
 	}
 
@@ -131,6 +126,8 @@ void Identifier::analyze()
 		cropResult.imageName = getCropName(params.imageName, i);
 		cv::imwrite(params.outputFolder + cropResult.imageName, crop);
 
+		// Get LatLon of the crop center
+		cropResult.coords = geolocater.targLatLon(centerY, centerX);
 		cropResults.push_back(cropResult);
 	}
 
@@ -150,9 +147,9 @@ void Identifier::analyze()
 	out.close();
 
 	// Show result
-	//namedWindow("Debug", WINDOW_AUTOSIZE);
-	//imshow("Debug", image);
-	//waitKey(0);
+	namedWindow("Debug", WINDOW_AUTOSIZE);
+	imshow("Debug", image);
+	waitKey(0);
 }
 
 
@@ -167,7 +164,7 @@ void Identifier::removeDuplicates(std::vector<cv::Rect>& mserResults, const Mat 
 
 	// filter mserResults, e.g boxes within boxes and other redundant bounds
 	double gridLength = min(3 * avg, image.cols / 5);
-	int gridsPerRow = ceil(image.cols / gridLength);
+	int gridsPerrow = ceil(image.cols / gridLength);
 	int gridsPerCol = ceil(image.rows / gridLength);
 	std::unordered_map<int, std::pair<int, cv::Rect>> hashTable;
 	std::vector<int> occurenceCount(mserResults.size(), 0);
@@ -187,11 +184,11 @@ void Identifier::removeDuplicates(std::vector<cv::Rect>& mserResults, const Mat 
 			// min x , y = 0
 			// max x , y = image.rows
 			// use extra precaution not to hash out of bounds
-			int xHash = min(floor((centerX + xoffset) / gridLength), gridsPerRow - 1);
+			int xHash = min(floor((centerX + xoffset) / gridLength), gridsPerrow - 1);
 			int yHash = min(floor((centerY + yoffset) / gridLength), gridsPerCol - 1);
 			xHash = max(xHash, 0);
 			yHash = max(yHash, 0);
-			int hashIndex = yHash*gridsPerRow + xHash;
+			int hashIndex = yHash*gridsPerrow + xHash;
 			auto p = hashTable.find(hashIndex);
 
 			if (p == hashTable.end())
@@ -209,7 +206,7 @@ void Identifier::removeDuplicates(std::vector<cv::Rect>& mserResults, const Mat 
 		hashTable.clear();
 	}
 
-	// not very efficient = O(n^2), but mserResults should be small anyways
+	// delete rois that don't remain in all 4 offset grid
 	int j = 0;
 	for (int i = 0; i < mserResults.size(); ++i)
 	{
@@ -224,7 +221,6 @@ void Identifier::removeDuplicates(std::vector<cv::Rect>& mserResults, const Mat 
 void Identifier::readGPSLog()
 {
 	// Parameters to fill
-	double latitude, longitude, altitude, heading;
 	std::string latitudeString, longitudeString, altitudeString, headingString, headingEnglishString;
 	std::string date;
 
@@ -234,7 +230,6 @@ void Identifier::readGPSLog()
 	std::ifstream file(params.gpsLog);
 	
 	bool firstLine = true;
-	bool imgFound = false;
 
 	if (file.is_open())
 	{
@@ -263,20 +258,18 @@ void Identifier::readGPSLog()
 			// Image name, latitude, longitude, altitude, heading
 			if (splitLine.size() >= 5 && splitLine[0] == params.imageName)
 			{
-				imgFound = true;
-
-				latitude = std::stod(splitLine[1]);
+				params.latitude = std::stod(splitLine[1]);
 				latitudeString = splitLine[1];
 
-				longitude = std::stod(splitLine[2]);
+				params.longitude = std::stod(splitLine[2]);
 				longitudeString = splitLine[2];
 
-				altitude = std::stod(splitLine[3]);
+				params.altitude = std::stod(splitLine[3]);
 				altitudeString = splitLine[3];
 
-				heading = std::stod(splitLine[4]);
+				params.heading = std::stod(splitLine[4]);
 				headingString = splitLine[4];
-				headingEnglishString = headingToEnglish(heading);
+				headingEnglishString = headingToEnglish(params.heading);
 
 				if (splitLine.size() >= 6)
 				{
@@ -288,14 +281,11 @@ void Identifier::readGPSLog()
 		file.close();
 	}
 
-	if (imgFound)
-	{
-		results->append("heading=" + headingEnglishString + "\n");
-		results->append("headingDegrees=" + headingString + "\n");
-		results->append("latitude=" + latitudeString + "\n");
-		results->append("longitude=" + longitudeString + "\n");
-		results->append("altitude=" + altitudeString + "\n");
-	}
+	results->append("heading=" + headingEnglishString + "\n");
+	results->append("headingDegrees=" + headingString + "\n");
+	results->append("latitude=" + latitudeString + "\n");
+	results->append("longitude=" + longitudeString + "\n");
+	results->append("altitude=" + altitudeString + "\n");
 }
 
 std::string Identifier::headingToEnglish(double headingDegrees)
@@ -329,6 +319,10 @@ void Identifier::writeCropResults(const std::vector<CropResult> &cropResults)
 		results->append("X=" + std::to_string(cropResults[i].x) + "\n");
 		results->append("Y=" + std::to_string(cropResults[i].y) + "\n");
 		results->append("Size=" + std::to_string(cropResults[i].size) + "\n");
+
+		LatLon coords = cropResults[i].coords;
+		results->append("latitude=" + std::to_string(coords.lat) + "\n");
+		results->append("longitude=" + std::to_string(coords.lon) + "\n");
 	}
 }
 
