@@ -42,8 +42,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_CORE_OPERATIONS_HPP__
-#define __OPENCV_CORE_OPERATIONS_HPP__
+#ifndef OPENCV_CORE_OPERATIONS_HPP
+#define OPENCV_CORE_OPERATIONS_HPP
 
 #ifndef __cplusplus
 #  error operations.hpp header must be compiled as C++
@@ -72,9 +72,9 @@ template<typename _Tp, int m> struct Matx_FastInvOp
             b(i, i) = (_Tp)1;
 
         if( method == DECOMP_CHOLESKY )
-            return hal::Cholesky(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m);
+            return Cholesky(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m);
 
-        return hal::LU(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m) != 0;
+        return LU(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m) != 0;
     }
 };
 
