@@ -17,9 +17,9 @@ https://drive.google.com/file/d/0B18NSvy37OQ4OXl0SzRRNHo4NFU/view?usp=sharing
 4. Download the test images from links above
 5. Go to the folder you want to clone this project into. Right click and select "Git Bash Here"
 	* Enter in the git bash:
-  ```
-  git clone https://github.com/utat-uav/Software.git
-  ```
+	```
+	git clone https://github.com/utat-uav/Software.git
+	```
 6. Download these missing files (libraries) and put them in the Classification folders: https://drive.google.com/drive/folders/0B18NSvy37OQ4a0dTeUF3UWE3RFE?usp=sharing
 7. Open the Software/Classification/SoftmaxRegression.sln file in Visual Studio 2013
 	* Configure the project for 32 bit (x86) in release mode
