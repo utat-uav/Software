@@ -27,6 +27,7 @@ https://drive.google.com/file/d/0B18NSvy37OQ4OXl0SzRRNHo4NFU/view?usp=sharing
 	* Build and run
 8. Open the Software/CVInterface.pro file with Qt
 	* Configure the project to use the MSVC 64 bit kit
+	* Switch to Release mode
 	* Turn off shadow build under project configurations
 	* Build and run
 
