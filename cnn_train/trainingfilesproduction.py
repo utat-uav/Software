@@ -195,19 +195,19 @@ for imagePath in imagePaths:
     ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
     first = np.resize(first, (1, 1600))
     data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]*4+0    
+    target[i] = charToIndex[character]#*4+0    
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+0) + "_" + character + "_" + str(0) + "_" + str(i) + ".png", second)
     second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
     ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]*4+0
+    target[i] = charToIndex[character]#*4+0
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+0) + "_" + character + "_" + str(0) + "_" + str(i) + ".png", third)
     third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
     ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]*4+0
+    target[i] = charToIndex[character]#*4+0
     i = i + 1
     
     
@@ -218,19 +218,19 @@ for imagePath in imagePaths:
     ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
     first = np.resize(first, (1, 1600))
     data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]*4+1  
+    target[i] = charToIndex[character]#*4+1  
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+1) + "_" + character + "_" + str(1) + "_" + str(i) + ".png", second)
     second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
     ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]*4+1
+    target[i] = charToIndex[character]#*4+1
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+1) + "_" + character + "_" + str(1) + "_" + str(i) + ".png", third)
     third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
     ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]*4+1
+    target[i] = charToIndex[character]#*4+1
     i = i + 1
 
     # 180 degrees
@@ -240,19 +240,19 @@ for imagePath in imagePaths:
     ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
     first = np.resize(first, (1, 1600))
     data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]*4+2 
+    target[i] = charToIndex[character]#*4+2 
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+2) + "_" + character + "_" + str(2) + "_" + str(i) + ".png", second)
     second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
     ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]*4+2
+    target[i] = charToIndex[character]#*4+2
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+2) + "_" + character + "_" + str(2) + "_" + str(i) + ".png", third)
     third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
     ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]*4+2
+    target[i] = charToIndex[character]#*4+2
     i = i + 1
     
     # 270 degrees
@@ -262,22 +262,22 @@ for imagePath in imagePaths:
     ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
     first = np.resize(first, (1, 1600))
     data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]*4+3
+    target[i] = charToIndex[character]#*4+3
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+3) + "_" + character + "_" + str(3) + "_" + str(i) + ".png", second)
     second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
     ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]*4+3
+    target[i] = charToIndex[character]#*4+3
     i = i + 1
     # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+3) + "_" + character + "_" + str(3) + "_" + str(i) + ".png", third)
     third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
     ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
     data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]*4+3
+    target[i] = charToIndex[character]#*4+3
     i = i + 1
 
-print("there are " + str(np.max(target)) + " classes")
+print("there are " + str(np.max(target)+1) + " classes")
 
 np.save("Data",data)
 np.save("Target",target)
