@@ -1,4 +1,4 @@
-# cv16-interface
+# UTAT-UAV CV Software
 
 Set of test images: 
 http://www.mediafire.com/download/29wqk8fr8h5n8qf/CVInterfacePics.zip
