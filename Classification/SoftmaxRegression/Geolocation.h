@@ -25,7 +25,9 @@ struct LatLon
 class Geolocation
 {
 public:
-	Geolocation(double _fov) : fov(_fov), center(LatLon(0,0)) {; }
+	Geolocation(double _fov, double _ground_level) : fov(_fov), 
+													 ground_level(_ground_level), 
+												     center(LatLon(0,0)) {; }
 
 	// geolocation on an image must be done after a call to updateParams
 	// heading angle is measured from the North axis
@@ -44,12 +46,11 @@ private:
 	unsigned im_height;
 
 	// the actual height used in calculations will be alt - ground_level.
-	// currently using a hard-coded value, although realistically this needs to be input at test-time 
-	double ground_level = 188.0;
+	double ground_level;
 };
 
 
 // for testing and adjusting FOV to be optimal
 void test();
 double getBestFOV(unsigned targ_row, unsigned targ_col, unsigned im_width, unsigned im_height, double heading, double alt,
-	LatLon center, LatLon targ, int num_samples);
+	LatLon center, LatLon targ, int num_samples, double ground_level);

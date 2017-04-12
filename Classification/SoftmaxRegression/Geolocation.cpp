@@ -69,6 +69,7 @@ void test()
 {
 	// test settings
 	double alt = 397.0;
+	double ground_level = 188.0;
 
 	// col corresponds to width, row corresponds to height (in order)
 	unsigned im_width = 1566;
@@ -79,10 +80,10 @@ void test()
 	LatLon center(43.783137, -79.464309);
 	LatLon targ(43.783226, -79.462765); // for evaluating the quality of prediction
 	cout.precision(12);
-	cout << "best fov: " << getBestFOV(targ_row, targ_col, im_width, im_height, heading, alt, center, targ, 300) << endl;
+	cout << "best fov: " << getBestFOV(targ_row, targ_col, im_width, im_height, heading, alt, center, targ, 300, 188.0) << endl;
 	
 	double test_fov = 75.0;
-	Geolocation g(test_fov);
+	Geolocation g(test_fov, ground_level);
 	g.updateParams(im_width, im_height, heading, alt, center);
 	LatLon predicted_targ = g.targLatLon(targ_row, targ_col);
 	cout << "prediction: " << predicted_targ.lat << " " << predicted_targ.lon << endl;
@@ -91,7 +92,7 @@ void test()
 
 // find the best fov for a given image and test coordinates
 double getBestFOV(unsigned targ_row, unsigned targ_col, unsigned im_width, unsigned im_height, double heading, double alt,
-	LatLon center, LatLon targ, int num_samples)
+	LatLon center, LatLon targ, int num_samples, double ground_level)
 {
 	double min_dist = FLT_MAX;
 	double best_fov = -1;
@@ -103,7 +104,7 @@ double getBestFOV(unsigned targ_row, unsigned targ_col, unsigned im_width, unsig
 	for (int i = 0; i < num_samples; ++i)
 	{
 		double fov = min + i * (max - min) / (num_samples - 1);
-		Geolocation g(fov);
+		Geolocation g(fov, ground_level);
 		g.updateParams(im_width, im_height, heading, alt, center);
 		LatLon predicted_targ = g.targLatLon(targ_row, targ_col);
 		double dist = targ.distanceFrom(predicted_targ);

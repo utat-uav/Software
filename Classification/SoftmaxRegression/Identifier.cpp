@@ -3,8 +3,8 @@
 
 
 
-Identifier::Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, ::string *results)
-	: results(results)
+Identifier::Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, ::string *results, double groundLevel)
+  : geolocater(75.0, groundLevel), results(results)
 {
 	params.imagePath = imagePath;
 	params.gpsLog = gpsLog;
