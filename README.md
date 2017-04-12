@@ -14,6 +14,7 @@ https://drive.google.com/file/d/0B18NSvy37OQ4OXl0SzRRNHo4NFU/view?usp=sharing
 1. Download & install git scm: https://git-scm.com/downloads
 2. Download & install Qt 5.6 MSVC 64 bit: https://www.qt.io/download/
 3. Download & install Visual Studio 2015 (MSVC 14.0): https://www.visualstudio.com/vs/older-downloads/
+	* Do a custom install and make sure all C++ 64 bit options are selected
 4. Download the test images from links above
 5. Go to the folder you want to clone this project into. Right click and select "Git Bash Here"
 	* Enter in the git bash:
