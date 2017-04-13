@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 
 		runZBar(path);
 	}
-	else if (mode == "-identify")
+	else if (mode == "-aio")
 	{
 		if (argc < 6)
 		{
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
 			return -1;
 		}
 
-		cout << "// STARTING IDENTIFIER..." << endl << endl;
+		cout << "// STARTING ALL IN ONE IDENTIFIER..." << endl << endl;
 		string programPath = argv[0];
 		string fileName = argv[2];
 		string gpsLog = argv[3];
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 
 		runAioIdentifier(fileName, gpsLog, outputFolder, programPath, cnnPath);
 	}
-	else if (mode == "-aio")
+	else if (mode == "-identify")
 	{
 		if (argc < 5)
 		{
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
 			return -1;
 		}
 
-		cout << "// STARTING ALL IN ONE IDENTIFIER..." << endl << endl;
+		cout << "// STARTING IDENTIFIER..." << endl << endl;
 		string fileName = argv[2];
 		string gpsLog = argv[3];
 		string outputFolder = argv[4];
