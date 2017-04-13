@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 */
 void credits()
 {
-	cout << "UTAT-UAV COMPUTER VISION CLASSIFICATION V3" << endl;
+	cout << "UTAT-UAV COMPUTER VISION CLASSIFICATION V3.0" << endl;
 	cout << endl;
 	cout << "Author(s): Davis Wu, Tianxing Li" << endl;
 	cout << "Creation Date: Dec 30, 2015" << endl;
