@@ -1,11 +1,12 @@
 #pragma once
 
 #include "stdafx.h"
+#include "Geolocation.h"
 
 class Identifier
 {
 public:
-	Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, std::string *results);
+	Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, std::string *results, double groundLevel = 188.0);
 	virtual ~Identifier();
 
 	struct Params
@@ -28,20 +29,27 @@ public:
 		unsigned maxArea;
 		unsigned minArea;
 		unsigned cropPadding;
+
+		// updated everytime image is read
+		double latitude, longitude, altitude, heading;
 	};
 
 	struct CropResult
 	{
 		std::string imageName;
+
+		// in pixels, x and y specify the center of the crop
 		int x;
 		int y;
 		int size;
+		LatLon coords = LatLon(0,0);
 	};
 
 	void analyze();
 
 private:
 	Params params;
+	Geolocation geolocater;
 	std::string *results;
 
 	void readGPSLog();

@@ -61,7 +61,8 @@ private:
 
 	// argument Mat 'shape' formatting: 
 	// all shape pixels = 1, other pixels associated with label = 2 (optional), everything else = 0
-	// returns: a Mat with all letter pixels = 1, everything else = 0
+	// returns a Mat with all letter pixels = 1, everything else = 0
+	// note that an emptyMat may be returned if nothing is found 
 	// the bool indicates whether this shape may be a false positive
 	std::pair<cv::Mat, bool> retrieveLetter(cv::Mat& shape, int shape_area);
 
