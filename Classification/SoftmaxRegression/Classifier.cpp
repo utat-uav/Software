@@ -34,7 +34,7 @@ bool Classifier::initialize()
 	return true;
 }
 
-int Classifier::classify(const string &imagePath)
+int Classifier::classify(const string &imagePath, Results &results)
 {
 	// call segmenter first
 	// segmentedImages[0] is shape, segmentedImages[1] is letter
@@ -42,8 +42,6 @@ int Classifier::classify(const string &imagePath)
 	vector<cv::Mat> segmentedImages = segm.segment();
 
 	string savePath = programPath.substr(0, programPath.find_last_of('\\'));
-	char finalChar = '-';
-	float finalConfidence = 0;
 	bool falsePositiveNoted = false;
 
 	//for (unsigned i = 0; i < segmentedImages.size(); ++i)
@@ -63,6 +61,10 @@ int Classifier::classify(const string &imagePath)
 		double confidence = 0;
 		char c = '-';
 
+		// Default return values
+		results.character = '-';
+		results.characterConfidence = 0;
+
 		// Do classification
 		try
 		{
@@ -81,6 +83,9 @@ int Classifier::classify(const string &imagePath)
 		}
 		else
 		{
+			results.character = c;
+			results.characterConfidence = confidence;
+
 			cout << "Classified as " << c << " with " << confidence << " confidence" << endl;
 		}
 	}

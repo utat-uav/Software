@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Utils.h"
 
+#include "Classifier.h"
+#include "BarcodeReader.h"
+
 Mat Utils::rotateImage(const Mat& image, int degrees) {
 	// get rotation matrix for rotating the image around its center
 	Point2f center(image.cols / 2.0, image.rows / 2.0);
@@ -79,4 +82,13 @@ void Utils::cropImage(Mat& image)
 	{
 		cout << "hmmm something went wrong" << endl;
 	}
+}
+
+bool Utils::allInOneClassify(const Mat& image, Classifier *classifier)
+{
+	assert(classifier != NULL);
+
+	//classifier->classify()
+
+	return true;
 }

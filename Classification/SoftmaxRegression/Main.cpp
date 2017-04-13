@@ -14,6 +14,7 @@ void credits();
 void runCNN(const string &path, const string &programPath);
 void runZBar(const string &path);
 void runIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder);
+void runAioIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder, const string &programPath, const string &cnnPath);
 void runSegmenter(const string &fileName);
 
 
@@ -68,13 +69,30 @@ int main(int argc, char** argv)
 	}
 	else if (mode == "-identify")
 	{
-		if (argc < 5)
+		if (argc < 6)
 		{
 			cout << "Insufficient arguments. Exiting program..." << endl;
 			return -1;
 		}
 
 		cout << "// STARTING IDENTIFIER..." << endl << endl;
+		string programPath = argv[0];
+		string fileName = argv[2];
+		string gpsLog = argv[3];
+		string outputFolder = argv[4];
+		string cnnPath = argv[5];
+
+		runAioIdentifier(fileName, gpsLog, outputFolder, programPath, cnnPath);
+	}
+	else if (mode == "-aio")
+	{
+		if (argc < 5)
+		{
+			cout << "Insufficient arguments. Exiting program..." << endl;
+			return -1;
+		}
+
+		cout << "// STARTING ALL IN ONE IDENTIFIER..." << endl << endl;
 		string fileName = argv[2];
 		string gpsLog = argv[3];
 		string outputFolder = argv[4];
@@ -120,10 +138,11 @@ void credits()
 	cout << "Latest Modification Date: April, 2017" << endl;
 	cout << "Info: attempts to classify characters" << endl;
 	cout << endl;
-	cout << "Command line info: [-cnn <serializedNN>] to run pre-trained program" << endl;
+	cout << "Command line info: [-cnn <cnnPath>] to run pre-trained program" << endl;
 	cout << "                   [-zbar <imagepath>] to read barcode" << endl;
 	cout << "                   [-segment <imagepath>] to run the segmenter" << endl;
 	cout << "                   [-identify <imagepath> <gpsLog> <outputFolder>] to identify and crop" << endl;
+	cout << "                   [-aio <imagepath> <gpsLog> <outputFolder> <cnnPath>] to identify and crop" << endl;
 	cout << "                   [-help me] for help" << endl;
 	cout << endl;
 }
@@ -154,6 +173,14 @@ void runIdentifier(const string &fileName, const string &gpsLog, const string &o
 {
 	string results;
 	Identifier identifier(fileName, gpsLog, outputFolder, &results);
+	identifier.analyze();
+}
+
+void runAioIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder, 
+	const string &programPath, const string &cnnPath)
+{
+	string results;
+	Identifier identifier(fileName, gpsLog, outputFolder, &results, 188.0, programPath, cnnPath);
 	identifier.analyze();
 }
 

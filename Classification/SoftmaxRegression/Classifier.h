@@ -5,11 +5,18 @@
 class Classifier
 {
 public:
+	struct Results
+	{
+		char character;
+		double characterConfidence;
+		// More to be added
+	};
+
 	Classifier(const string &folderPath, const string &programPath);
 	~Classifier();
 
 	bool initialize();
-	int classify(const string &imagePath);
+	int classify(const string &imagePath, Results &results);
 	static char getCharFromIdx(int idx);
 
 private:

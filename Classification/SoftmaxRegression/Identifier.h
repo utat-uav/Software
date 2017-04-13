@@ -6,7 +6,8 @@
 class Identifier
 {
 public:
-	Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, std::string *results, double groundLevel = 188.0);
+	Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, std::string *results,
+		double groundLevel = 188.0, string programPath = "", string cnnPath = "");
 	virtual ~Identifier();
 
 	struct Params
@@ -48,9 +49,13 @@ public:
 	void analyze();
 
 private:
+	bool allInOne;
 	Params params;
 	Geolocation geolocater;
 	std::string *results;
+
+	string programPath;
+	string cnnPath;
 
 	void readGPSLog();
 	std::string headingToEnglish(double headingDegrees);

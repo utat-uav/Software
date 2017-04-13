@@ -1,14 +1,21 @@
 #include "stdafx.h"
 #include "Identifier.h"
 
+#include "Utils.h"
+#include "Classifier.h"
 
-
-Identifier::Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, ::string *results, double groundLevel)
-  : geolocater(75.0, groundLevel), results(results)
+/*
+ * All in one mode means it will perform all of classification and barcode reading
+ */
+Identifier::Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, ::string *results,
+	double groundLevel, string programPath, string cnnPath)
+  : geolocater(75.0, groundLevel), results(results), programPath(programPath), cnnPath(cnnPath)
 {
 	params.imagePath = imagePath;
 	params.gpsLog = gpsLog;
 	params.outputFolder = outputFolder;
+
+	allInOne = programPath != "" && cnnPath != "";
 
 	// Get the name of the file from the file path
 	int indexOfSlash = imagePath.find_last_of("\\");
@@ -102,6 +109,13 @@ void Identifier::analyze()
 
 	removeDuplicates(mserResults, image);
 
+	Classifier *classifier = NULL;
+	if (allInOne)
+	{
+		classifier = new Classifier(cnnPath, programPath);
+		classifier->initialize();
+	}
+
 	// Process mserResults
 	std::vector<CropResult> cropResults;
 	for (int i = 0; i < mserResults.size(); ++i)
@@ -138,6 +152,15 @@ void Identifier::analyze()
 		// Do crop
 		cv::Mat crop = image(roi);
 
+		// Check if valid by doing all the classification tests
+		if (allInOne)
+		{
+			if (!Utils::allInOneClassify(crop, classifier))
+			{
+				continue;
+			}
+		}
+
 		// Write image
 		// Constructor ensures that params.outputFolder ends in a slash
 		cropResult.imageName = getCropName(params.imageName, i);
@@ -146,6 +169,11 @@ void Identifier::analyze()
 		// Get LatLon of the crop center
 		cropResult.coords = geolocater.targLatLon(centerY, centerX);
 		cropResults.push_back(cropResult);
+	}
+
+	if (allInOne)
+	{
+		delete classifier;
 	}
 
 	// Write results to output file

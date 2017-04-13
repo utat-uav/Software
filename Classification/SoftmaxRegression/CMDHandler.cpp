@@ -97,7 +97,8 @@ void CMDHandler::startCMDInput()
 
 			try
 			{
-				classifier->classify(imagePath);
+				Classifier::Results results;
+				classifier->classify(imagePath, results);
 			}
 			catch (cv::Exception& e)
 			{
