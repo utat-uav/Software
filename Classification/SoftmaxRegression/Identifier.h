@@ -16,8 +16,8 @@ public:
 		{
 			sizeOfROI = 300;
 			minPointsInCluster = 5;
-			maxArea = 300000;
-			minArea = 2650;
+			maxArea = 120000;
+			minArea = 800;
 			cropPadding = 3;
 		}
 

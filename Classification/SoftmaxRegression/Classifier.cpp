@@ -79,7 +79,7 @@ int Classifier::classify(const string &imagePath, Results &results)
 
 		if (confidence < 0.85)
 		{
-			cout << "Invalid image. Confidence of " << confidence << " is too low. Likely a false positive ..." << endl;
+			cout << "Invalid image. Confidence of " << confidence << " for a " << c << " is too low. Likely a false positive ..." << endl;
 		}
 		else
 		{

@@ -71,7 +71,7 @@ void Identifier::analyze()
 	cv::blur(hsvImage, hsvImage, cv::Size(6, 6));
 
 	// Decide on a constant size
-	const int constSize = 1000;
+	const int constSize = 1300;
 	double rowScale = (double)image.rows / constSize;
 	double colScale = (double)image.cols / constSize;
 
