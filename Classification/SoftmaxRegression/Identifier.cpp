@@ -147,9 +147,9 @@ void Identifier::analyze()
 	out.close();
 
 	// Show result
-	namedWindow("Debug", WINDOW_AUTOSIZE);
-	imshow("Debug", image);
-	waitKey(0);
+	//namedWindow("Debug", WINDOW_AUTOSIZE);
+	//imshow("Debug", image);
+	//waitKey(0);
 }
 
 

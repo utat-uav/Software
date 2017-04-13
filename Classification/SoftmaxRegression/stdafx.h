@@ -30,14 +30,6 @@
 #include <algorithm>
 #include <amp.h>
 
-#define LABEL_SIZE 62
-#define DATA_SIZE 784
-#define TRAINING_STEP 0.003
-#define MIN_TRAIN_TIME 6000
-#define TARGET_CROSS_ENTROPY 0.015
-#define INFINITY 100000
-#define BATCH_SIZE 401
-
 using namespace concurrency;
 using namespace cv;
 using namespace std;

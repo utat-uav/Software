@@ -77,17 +77,11 @@ def rotate_image(image, angle):
     cropped[:, :, :] = dst_image[left:(left+w), up:(up+h), :]
     return cropped
     
-def getRotationsPlusMinus(angle, image):
-    rotated1 = rotate_image(image, angle - 15)
-    rotated1 = cv2.resize(rotated1, (40, 40), interpolation = cv2.INTER_CUBIC)
-    
-    rotated2 = rotate_image(image, angle)
-    rotated2 = cv2.resize(rotated2, (40, 40), interpolation = cv2.INTER_CUBIC)
-    
-    rotated3 = rotate_image(image, angle + 15)
-    rotated3 = cv2.resize(rotated3, (40, 40), interpolation = cv2.INTER_CUBIC)
-    
-    return (rotated1, rotated2, rotated3)
+def rotateImg(angle, image):
+    rotated = rotate_image(image, angle)
+    rotated = cv2.resize(rotated, (40, 40), interpolation = cv2.INTER_CUBIC)
+
+    return rotated
 
 # Script parameters
 directory = "D:/Workspace/UAV/Software/cnn_train/FontDatabase/English/Fnt"
@@ -151,132 +145,61 @@ for x in os.walk(directory):
         paths = [x[0] + "/" + name for name in x[2]]
         imagePaths.extend(paths)
     
+numRotations = 36
+    
 #Data array
-#data = np.ndarray((len(imagePaths)*12,1600), int)
-data = np.zeros((len(imagePaths)*12, 1600), dtype=np.int8)
-
+numPts = len(imagePaths) * numRotations
+data = np.zeros((numPts, 1600), dtype=np.uint8)
 #Target Array
-target = np.zeros((len(imagePaths)*12, 1))
+target = np.zeros((numPts, 1))
 
-# Do outputs
-# Name is formatted like so: <classIndex>_<character>_<rotationIndex>_<datasetIndex>.png
-# Class index is the most relevant and is for training the neural net
 rotationInterval = 10
 i = 0
-
 currID = -1
 
 for imagePath in imagePaths:
     # Get image name
     name = imagePath.split("/")[-1]
     ID = name[3:6]
+    character = D[ID]
     
     if (currID != ID):
         currID = ID
-        print("starting on class " + str(currID))
+        print("starting on class " + str(charToIndex[character]) +\
+                " (character " + str(character) + ")")
     
     # Read and resize immediately
     image = cv2.imread(imagePath)
-    
+    image = cv2.resize(image, (40, 40))
 
     # Invert colours
     image = 255 - image
-    
-    character = D[ID]
-    
-    # if i % 1200 == 0:
-    #     print "outputting " + character + " " + str(i)
-    
-    # 0 degrees
-    first, second, third = getRotationsPlusMinus(0, image)
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+0) + "_" + character + "_" + str(0) + "_" + str(i) + ".png", first)
-    first = cv2.cvtColor(first,cv2.COLOR_RGB2GRAY)    
-    ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
-    first = np.resize(first, (1, 1600))
-    data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]#*4+0    
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+0) + "_" + character + "_" + str(0) + "_" + str(i) + ".png", second)
-    second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
-    ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]#*4+0
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+0) + "_" + character + "_" + str(0) + "_" + str(i) + ".png", third)
-    third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
-    ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]#*4+0
-    i = i + 1
-    
-    
-    # 90 degrees
-    first, second, third = getRotationsPlusMinus(90, image)
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+1) + "_" + character + "_" + str(1) + "_" + str(i) + ".png", first)
-    first = cv2.cvtColor(first,cv2.COLOR_RGB2GRAY)    
-    ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
-    first = np.resize(first, (1, 1600))
-    data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]#*4+1  
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+1) + "_" + character + "_" + str(1) + "_" + str(i) + ".png", second)
-    second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
-    ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]#*4+1
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+1) + "_" + character + "_" + str(1) + "_" + str(i) + ".png", third)
-    third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
-    ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]#*4+1
-    i = i + 1
 
-    # 180 degrees
-    first, second, third = getRotationsPlusMinus(180, image)
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+2) + "_" + character + "_" + str(2) + "_" + str(i) + ".png", first)
-    first = cv2.cvtColor(first,cv2.COLOR_RGB2GRAY)    
-    ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
-    first = np.resize(first, (1, 1600))
-    data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]#*4+2 
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+2) + "_" + character + "_" + str(2) + "_" + str(i) + ".png", second)
-    second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
-    ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]#*4+2
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+2) + "_" + character + "_" + str(2) + "_" + str(i) + ".png", third)
-    third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
-    ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]#*4+2
-    i = i + 1
-    
-    # 270 degrees
-    first, second, third = getRotationsPlusMinus(90, image)
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+3) + "_" + character + "_" + str(3) + "_" + str(i) + ".png", first)
-    first = cv2.cvtColor(first,cv2.COLOR_RGB2GRAY)    
-    ret, first = cv2.threshold(first, 1, 1, cv2.THRESH_BINARY)
-    first = np.resize(first, (1, 1600))
-    data[i,:]= np.resize(first,(1,1600))
-    target[i] = charToIndex[character]#*4+3
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+3) + "_" + character + "_" + str(3) + "_" + str(i) + ".png", second)
-    second = cv2.cvtColor(second,cv2.COLOR_RGB2GRAY)    
-    ret, second = cv2.threshold(second, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(second,(1,1600))
-    target[i] = charToIndex[character]#*4+3
-    i = i + 1
-    # cv2.imwrite(outputDirectory + str(charToIndex[character]*4+3) + "_" + character + "_" + str(3) + "_" + str(i) + ".png", third)
-    third = cv2.cvtColor(third,cv2.COLOR_RGB2GRAY)    
-    ret, third = cv2.threshold(third, 1, 1, cv2.THRESH_BINARY)
-    data[i,:] = np.resize(third,(1,1600))
-    target[i] = charToIndex[character]#*4+3
-    i = i + 1
+    for rotIdx in range(numRotations):
+        angle = rotIdx * (360 / numRotations)
+        rotatedImg = rotateImg(angle, image)
+		
+        # Convert to grayscale
+        rotatedImg = cv2.cvtColor(rotatedImg, cv2.COLOR_RGB2GRAY)  
+		
+        # Threshold it into a binary image
+        ret, rotatedImg = cv2.threshold(rotatedImg, 128, 1, cv2.THRESH_BINARY)
+        
+        # Reshape it into a vector
+        rotatedImg = np.reshape(rotatedImg, (1, 1600))
+
+        data[i,:] = rotatedImg
+        target[i] = charToIndex[character]
+        
+        # Verification
+        #print("Verifying " + str(i) + " target = " + str(target[i]))
+        #cv2.imshow("Verification", np.reshape(data[i,:], (40, 40)) * 255)
+        #cv2.waitKey(0)
+        
+        i = i + 1
 
 print("there are " + str(np.max(target)+1) + " classes")
+print(str(len(imagePaths)) + " original images")
 
 np.save("Data",data)
 np.save("Target",target)

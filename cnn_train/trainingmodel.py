@@ -6,52 +6,62 @@ import time
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import freeze_graph
+
+'''
+Convenience functions
+'''
 
 variableIdx = 0
 
 def visualizeConvWeights(matrix):
-  numImages = matrix.shape[3]
-  imgDim = matrix.shape[0]
-  numRowsAndColumns = int(np.sqrt(float(numImages)) + 0.5)
-  
-  fig = plt.figure()
-  fig.patch.set_facecolor('white')
-  gs = gridspec.GridSpec(numRowsAndColumns, numRowsAndColumns,\
+    numImages = matrix.shape[3]
+    imgDim = matrix.shape[0]
+    numRowsAndColumns = int(np.sqrt(float(numImages)) + 0.5)
+
+    fig = plt.figure()
+    fig.patch.set_facecolor('white')
+    gs = gridspec.GridSpec(numRowsAndColumns, numRowsAndColumns,\
                           hspace=0.1, wspace=0.1)
-  for index, g in enumerate(gs):
-    if index >= numImages:
-      break
-    image = np.reshape(matrix[:,:,:,index], [imgDim, imgDim])
-    ax = plt.subplot(g)
-    ax.matshow(image, cmap = plt.cm.coolwarm)
-    ax.set_xticks([])
-    ax.set_yticks([])
-  
-  plt.show()
+    for index, g in enumerate(gs):
+        if index >= numImages:
+            break
+        image = np.reshape(matrix[:,:,:,index], [imgDim, imgDim])
+        ax = plt.subplot(g)
+        ax.matshow(image, cmap = plt.cm.coolwarm)
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    plt.show()
 
 def weight_variable(shape, convolution):
-  global variableIdx
-  variableIdx = variableIdx + 1
-  if convolution == True:
-    return tf.get_variable("W" + str(variableIdx), shape=shape,\
-              initializer=tf.contrib.layers.xavier_initializer_conv2d(\
-              uniform = False))
-  else:
-    return tf.get_variable("W" + str(variableIdx), shape=shape,\
-              initializer=tf.contrib.layers.xavier_initializer(\
-              uniform = False))
+    global variableIdx
+    variableIdx = variableIdx + 1
+    if convolution == True:
+        return tf.get_variable("W" + str(variableIdx), shape=shape,\
+                  initializer=tf.contrib.layers.xavier_initializer_conv2d(\
+                  uniform = False))
+    else:
+        return tf.get_variable("W" + str(variableIdx), shape=shape,\
+                  initializer=tf.contrib.layers.xavier_initializer(\
+                  uniform = False))
 
 def bias_variable(shape):
-  initial = tf.constant(0.15, shape=shape)
-  return tf.Variable(initial)
+    initial = tf.constant(0.15, shape=shape)
+    return tf.Variable(initial)
   
 def conv2d(x, W):
-  return tf.nn.conv2d(x, W, strides = [1, 1, 1, 1], padding = 'SAME',\
+    return tf.nn.conv2d(x, W, strides = [1, 1, 1, 1], padding = 'SAME',\
           use_cudnn_on_gpu = True)
 
 def max_pool_2x2(x):
-  return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                        strides=[1, 2, 2, 1], padding='SAME')
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],\
+                            strides=[1, 2, 2, 1], padding='SAME')
+
+
+'''
+Load and partition data
+'''
 
 # Loading data
 data = np.load("Data.npy")
@@ -90,6 +100,11 @@ print(str(validfiles.shape[0]) + " validation points")
 center = np.mean(trainfiles)
 print("data center is " + str(center))
 
+
+'''
+CNN Parameters
+'''
+
 sess = tf.InteractiveSession()
 
 # CNN Parameters
@@ -99,8 +114,13 @@ conv_out3 = 192
 fully_connected_neurons = 1152
 reg_rate = 0.0005
 
+
+'''
+Graph definitions
+'''
+
 # 1600, number of pixels of an image (40*40)
-x = tf.placeholder(tf.float32, shape=[None, 1600], name = "x_in")
+x = tf.placeholder(tf.float32, shape=[None, 1600], name = "input")
 
 # numclasses, number of outputs, number of classes
 y__ = tf.placeholder(tf.float32, shape=[None, 1])
@@ -162,14 +182,7 @@ wd_3 = tf.reduce_sum(tf.square(W_conv3))
 wd_4 = tf.reduce_sum(tf.square(W_fc1))
 wd_5 = tf.reduce_sum(tf.square(W_fc2))
 wd_6 = tf.reduce_sum(tf.square(W_fc3))
-# bd_1 = tf.reduce_sum(tf.square(b_conv1))
-# bd_2 = tf.reduce_sum(tf.square(b_conv2))
-# bd_3 = tf.reduce_sum(tf.square(b_conv3))
-# bd_4 = tf.reduce_sum(tf.square(b_fc1))
-# bd_5 = tf.reduce_sum(tf.square(b_fc2))
-# bd_6 = tf.reduce_sum(tf.square(b_fc3))
-weight_decay = wd_1 + wd_2 + wd_3 + wd_4 + wd_5 + wd_6# +\
-                # bd_1 + bd_2 + bd_3 + bd_4 + bd_5 + bd_6
+weight_decay = wd_1 + wd_2 + wd_3 + wd_4 + wd_5 + wd_6
 
 # Cross entropy
 cross_entropy = tf.reduce_mean(
@@ -185,50 +198,54 @@ sess.run(tf.global_variables_initializer())
 size = 360 #batch size
 batch_num = int(trainsize/size)
 
+
+'''
+Training loop
+'''
+
 for i in range(20):
-  for j in range(batch_num):
-    train = trainfiles[j*size:j*size+size]
-    result = trainresult[j*size:j*size+size]    
-    train_step.run(feed_dict={x: train, y__: result, keep_prob: 0.5})
+    for j in range(batch_num):
+        train = trainfiles[j*size:j*size+size]
+        result = trainresult[j*size:j*size+size]    
+        train_step.run(feed_dict={x: train, y__: result, keep_prob: 0.5})
 
     if (j%100 == 0):
-      loss = sess.run(cross_entropy, feed_dict={x: validfiles, y__: validresult,\
+        loss = sess.run(cross_entropy, feed_dict={x: validfiles, y__: validresult,\
                                                 keep_prob: 1.0})
-      acc = sess.run(accuracy, feed_dict={x: validfiles, y__: validresult,\
+        acc = sess.run(accuracy, feed_dict={x: validfiles, y__: validresult,\
                                           keep_prob: 1.0})
-      print("Validation acc = " + str(acc) + " loss = " + str(loss) +\
-            " at epoch " + str(i) + " batch " + str(j))
-      # print(result.shape)
+        print("Validation acc = " + str(acc) + " loss = " + str(loss) +\
+              " at epoch " + str(i) + " batch " + str(j))
       
-      # wd1 = sess.run(wd_1, feed_dict={x: train, y__: result, keep_prob: 1.0})
-      # wd2 = sess.run(wd_2, feed_dict={x: train, y__: result, keep_prob: 1.0})
-      # wd3 = sess.run(wd_3, feed_dict={x: train, y__: result, keep_prob: 1.0})
-      # wd4 = sess.run(wd_4, feed_dict={x: train, y__: result, keep_prob: 1.0})
-      # wd5 = sess.run(wd_5, feed_dict={x: train, y__: result, keep_prob: 1.0})
-      # wd6 = sess.run(wd_6, feed_dict={x: train, y__: result, keep_prob: 1.0})
-      # 
-      # print("wd1 = " + str(wd1))
-      # print("wd2 = " + str(wd2))
-      # print("wd3 = " + str(wd3))
-      # print("wd4 = " + str(wd4))
-      # print("wd5 = " + str(wd5))
-      # print("wd6 = " + str(wd6))
-      
-  shuffle = np.arange(trainsize)
-  np.random.shuffle(shuffle)
+    shuffle = np.arange(trainsize)
+    np.random.shuffle(shuffle)
 
-  trainfiles = trainfiles[shuffle]
-  trainresult = trainresult[shuffle]
+    trainfiles = trainfiles[shuffle]
+    trainresult = trainresult[shuffle]
 
 tf.train.write_graph(sess.graph_def, './', 'mlp.pb', as_text=False)
+
+
+'''
+Final accuracy test
+'''
 
 testAcc = sess.run(accuracy, feed_dict={\
                     x: testfiles, y__: testresult, keep_prob: 1.0})
 print("test accuracy %g"%testAcc)
 
 
-    
-#next steps: save all the tensors to a tensorflow file (??)
-#store the numbers in binary in the future
+'''
+Graph saving code
+'''
 
+checkpoint_dir = "model"
+model_dir = "model"
+
+# Save variable checkpoints
+checkpoint_prefix = os.path.join(checkpoint_dir, "graph")
+saver.save(sess, checkpoint_prefix)
+
+# Do freeze
+freeze_graph.freeze_graph(model_dir)
 
