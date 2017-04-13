@@ -1,1 +1,0 @@
-This is where the frozen graph and checkpoints are generated

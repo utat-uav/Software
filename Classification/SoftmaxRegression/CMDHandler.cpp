@@ -1,13 +1,19 @@
 #include "stdafx.h"
 #include "CMDHandler.h"
+#include "Classifier.h"
+#include "Segmenter.h"
 
 
-CMDHandler::CMDHandler(string folderPath, string _programPath)
+CMDHandler::CMDHandler(const string &folderPath, const string &programPath)
+	: programPath(programPath)
 {
+	classifier = new Classifier(folderPath, programPath);
+	initialized = classifier->initialize();
 }
 
 CMDHandler::~CMDHandler()
 {
+	delete classifier;
 }
 
 void CMDHandler::stitch(vector<Mat> &images)
@@ -60,9 +66,8 @@ void CMDHandler::startCMDInput()
 
 			try
 			{
-
+				cout << "Not implemented yet" << endl;
 			}
-			
 			catch(cv::Exception& e)
 			{
 				cout << "Something went wrong" << endl;
@@ -90,47 +95,15 @@ void CMDHandler::startCMDInput()
 			}
 			ifile.close();
 
-			// call segmenter first
-			// segmentedImages[0] is shape, segmentedImages[1] is letter
-			Segmenter segm(imagePath);
-			vector<cv::Mat> segmentedImages = segm.segment();
-
-			string savePath = programPath.substr(0, programPath.find_last_of('\\'));
-			char finalChar = '0';
-			float finalConfidence = 0;
-			bool falsePositiveNoted = false;
-			for (unsigned i = 0; i < segmentedImages.size(); ++i)
+			try
 			{
-				if (segmentedImages[i].empty())
-				{
-					if (!falsePositiveNoted)
-					{
-						falsePositiveNoted = true;
-						cout << "Likely a false positive ..." << endl;
-					}
-					continue;
-				}
-					
-				cv::imwrite(savePath + "\\label.jpg", segmentedImages[i]);
-				float confidence = 0;
-				char c = '-';
-				try 
-				{
-					
-				}
-				catch (cv::Exception &e)
-				{
-					continue;
-				}
-
-				if (confidence >= finalConfidence)
-				{
-					finalConfidence = confidence;
-					finalChar = c;
-				}
+				classifier->classify(imagePath);
+			}
+			catch (cv::Exception& e)
+			{
+				cout << "Something went wrong" << endl;
 			}
 
-			cout << "Classified as " << finalChar << " with " << finalConfidence << " confidence" << endl;
 			cout << endl;
 		}
 		else if (command == "zbar")
@@ -144,6 +117,8 @@ void CMDHandler::startCMDInput()
 				cout << "Insufficient or invalid arguments. Type 'help' for more information" << endl;
 				continue;
 			}
+
+			cout << imagePath << endl;
 
 			BarcodeReader barcodeReader;
 			barcodeReader.scanImage(imagePath);

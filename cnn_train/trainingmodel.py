@@ -173,7 +173,7 @@ h_fc2_drop = tf.nn.dropout(h_fc2, keep_prob)
 W_fc3 = weight_variable([fully_connected_neurons, numclasses], False)
 b_fc3 = bias_variable([numclasses])
 
-y_conv = tf.add(tf.matmul(h_fc2_drop, W_fc3), b_fc3, name = "y_out")
+y_conv = tf.add(tf.matmul(h_fc2_drop, W_fc3), b_fc3, name = "out_node")
 
 # Weight decay
 wd_1 = tf.reduce_sum(tf.square(W_conv1))
@@ -203,19 +203,19 @@ batch_num = int(trainsize/size)
 Training loop
 '''
 
-for i in range(20):
+for i in range(15):
     for j in range(batch_num):
         train = trainfiles[j*size:j*size+size]
         result = trainresult[j*size:j*size+size]    
         train_step.run(feed_dict={x: train, y__: result, keep_prob: 0.5})
 
-    if (j%100 == 0):
-        loss = sess.run(cross_entropy, feed_dict={x: validfiles, y__: validresult,\
-                                                keep_prob: 1.0})
-        acc = sess.run(accuracy, feed_dict={x: validfiles, y__: validresult,\
-                                          keep_prob: 1.0})
-        print("Validation acc = " + str(acc) + " loss = " + str(loss) +\
-              " at epoch " + str(i) + " batch " + str(j))
+        if (j % 100 == 0):
+            loss = sess.run(cross_entropy, feed_dict={x: validfiles, y__: validresult,\
+                                                    keep_prob: 1.0})
+            acc = sess.run(accuracy, feed_dict={x: validfiles, y__: validresult,\
+                                              keep_prob: 1.0})
+            print("Validation acc = " + str(acc) + " loss = " + str(loss) +\
+                  " at epoch " + str(i) + " batch " + str(j))
       
     shuffle = np.arange(trainsize)
     np.random.shuffle(shuffle)
@@ -238,6 +238,8 @@ print("test accuracy %g"%testAcc)
 '''
 Graph saving code
 '''
+
+saver = tf.train.Saver()
 
 checkpoint_dir = "model"
 model_dir = "model"

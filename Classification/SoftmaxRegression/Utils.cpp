@@ -76,7 +76,4 @@ void Utils::cropImage(Mat& image)
 	{
 		cout << "hmmm something went wrong" << endl;
 	}
-
-	// Resize
-	resize(image, image, Size(28, 28));
 }

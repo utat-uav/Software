@@ -4,6 +4,7 @@
 #include "CMDHandler.h"
 #include "BarcodeReader.h"
 #include "Identifier.h"
+#include "Segmenter.h"
 
 //--------------------------------------------------------------------
 // PROTOTYPES
