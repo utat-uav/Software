@@ -63,10 +63,15 @@ void Identifier::analyze()
 	cv::cvtColor(image, hsvImage, cv::COLOR_RGB2HSV);
 	cv::blur(hsvImage, hsvImage, cv::Size(6, 6));
 
+	// Decide on a constant size
+	const int constSize = 800;
+	double rowScale = (double)image.rows / constSize;
+	double colScale = (double)image.cols / constSize;
+
 	// Create MSER
 	cv::Ptr<cv::MSER> mser = cv::MSER::create(5,
-		params.minArea / (double)2738 * image.rows,
-		params.maxArea / (double)2738 * image.rows,
+		params.minArea / (double)2738 * constSize,
+		params.maxArea / (double)2738 * constSize,
 		0.099, 0.65, 200, 1.01, 0.003, 5);
 
 	// Split hsv channels
@@ -79,8 +84,20 @@ void Identifier::analyze()
 	{
 		std::vector<std::vector<cv::Point>> msers;
 		std::vector<cv::Rect> bboxes;
-		mser->detectRegions(hsv[i], msers, bboxes);
+		Mat resized(hsv[i].rows, hsv[i].cols, hsv[i].depth());
+		cv::resize(hsv[i], resized, cv::Size(constSize, constSize));
+		mser->detectRegions(resized, msers, bboxes);
 		mserResults.insert(mserResults.end(), bboxes.begin(), bboxes.end());
+	}
+
+	// Rescale the bounding boxes
+	for (int i = 0; i < mserResults.size(); ++i)
+	{
+		mserResults[i].x *= colScale;
+		mserResults[i].width *= colScale;
+
+		mserResults[i].y *= rowScale;
+		mserResults[i].height *= rowScale;
 	}
 
 	removeDuplicates(mserResults, image);
