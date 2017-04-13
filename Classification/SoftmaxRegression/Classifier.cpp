@@ -77,7 +77,7 @@ int Classifier::classify(const string &imagePath, Results &results)
 			continue;
 		}
 
-		if (confidence < 0.85)
+		if (confidence < 0.8)
 		{
 			cout << "Invalid image. Confidence of " << confidence << " for a " << c << " is too low. Likely a false positive ..." << endl;
 		}
@@ -139,7 +139,7 @@ void Classifier::classifyCharacterHelper(const Mat &image, char &c, double &conf
 
 	std::vector<std::pair<string, tensorflow::Tensor>> inputs = {
 		{ "input", inputTensor },
-		{ "Placeholder_1", keepProb }
+		{ "keep_prob", keepProb }
 	};
 
 	// Get the output
