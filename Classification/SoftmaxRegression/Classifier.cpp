@@ -47,14 +47,10 @@ int Classifier::classify(const string &imagePath)
 		try
 		{
 			// classify D:\Workspace\UAV\Test Flights\Flight3_output\im0024roi0.jpg
-			
 			cv::Mat image = cv::imread(savePath + "\\label.jpg", cv::IMREAD_GRAYSCALE);
 			processImage(image);
 
-			cv::imshow("test", image);
-			cv::waitKey(0);
-			cv::destroyWindow("test");
-			
+
 		}
 		catch (cv::Exception &e)
 		{
