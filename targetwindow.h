@@ -26,8 +26,6 @@ private slots:
 
     void on_classifyButton_pressed();
 
-    void on_classifyWithRotation_clicked();
-
     void closeEvent(QCloseEvent *event);
 
 private:

@@ -110,8 +110,8 @@ sess = tf.InteractiveSession()
 # CNN Parameters
 conv_out1 = 128
 conv_out2 = 192
-conv_out3 = 192
-fully_connected_neurons = 1152
+conv_out3 = 256
+fully_connected_neurons = 1536
 reg_rate = 0.0005
 
 
@@ -159,7 +159,7 @@ b_fc1 = bias_variable([fully_connected_neurons])
 
 h_pool3_flat = tf.reshape(h_pool3, [-1, 5 * 5 * conv_out3])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool3_flat, W_fc1) + b_fc1)
-keep_prob = tf.placeholder(tf.float32)
+keep_prob = tf.placeholder(tf.float32, name = "keep_prob")
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 # second fully connected layer
@@ -195,7 +195,7 @@ correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 sess.run(tf.global_variables_initializer())
 
-size = 360 #batch size
+size = 700 #batch size
 batch_num = int(trainsize/size)
 
 
@@ -203,7 +203,7 @@ batch_num = int(trainsize/size)
 Training loop
 '''
 
-for i in range(15):
+for i in range(50):
     for j in range(batch_num):
         train = trainfiles[j*size:j*size+size]
         result = trainresult[j*size:j*size+size]    
@@ -222,8 +222,6 @@ for i in range(15):
 
     trainfiles = trainfiles[shuffle]
     trainresult = trainresult[shuffle]
-
-tf.train.write_graph(sess.graph_def, './', 'mlp.pb', as_text=False)
 
 
 '''

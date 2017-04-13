@@ -62,14 +62,6 @@ void TargetWindow::on_classifyButton_pressed()
     connect(dataPackage->consoleOutput, &QTextBrowser::textChanged, this, &TargetWindow::classify);
 }
 
-void TargetWindow::on_classifyWithRotation_clicked()
-{
-    this->setEnabled(false);
-    processing = true;
-    dataPackage->classifier->write("classifyWithRotation "+targetListItem->imageFilePath.toLatin1()+"\n");
-    connect(dataPackage->consoleOutput, &QTextBrowser::textChanged, this, &TargetWindow::classify);
-}
-
 void TargetWindow::classify(){
     QString str = dataPackage->consoleOutput->toHtml() ;
     str.remove(0,str.lastIndexOf("Classified as")) ;

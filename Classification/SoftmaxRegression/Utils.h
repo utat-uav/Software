@@ -3,6 +3,6 @@
 
 namespace Utils
 {
-	void rotateImage(Mat& image, int degrees);
+	Mat rotateImage(const Mat& image, int degrees);
 	void cropImage(Mat& image);
 }

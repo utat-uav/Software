@@ -123,12 +123,17 @@ void CMDHandler::startCMDInput()
 			BarcodeReader barcodeReader;
 			barcodeReader.scanImage(imagePath);
 		}
+		else if (command == "exit")
+		{
+			break;
+		}
 		else if (command == "help")
 		{
 			cout << "Commands are: " << endl;
 			cout << "      testBatch <folderPath>" << endl;
 			cout << "      classify <imagePath>" << endl;
 			cout << "      zbar <imagePath>" << endl;
+			cout << "      exit" << endl;
 			cout << endl;
 		}
 		else

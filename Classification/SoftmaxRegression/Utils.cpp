@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Utils.h"
 
-void Utils::rotateImage(Mat& image, int degrees) {
+Mat Utils::rotateImage(const Mat& image, int degrees) {
 	// get rotation matrix for rotating the image around its center
 	Point2f center(image.cols / 2.0, image.rows / 2.0);
 	Mat rot = getRotationMatrix2D(center, degrees, 1.0);
@@ -13,7 +13,10 @@ void Utils::rotateImage(Mat& image, int degrees) {
 	rot.at<double>(0, 2) += bbox.width / 2.0 - center.x;
 	rot.at<double>(1, 2) += bbox.height / 2.0 - center.y;
 
-	warpAffine(image, image, rot, bbox.size());
+	Mat output(image.rows, image.cols, image.depth());
+	warpAffine(image, output, rot, bbox.size());
+
+	return output;
 }
 
 
