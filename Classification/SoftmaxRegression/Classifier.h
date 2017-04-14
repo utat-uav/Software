@@ -9,6 +9,7 @@ public:
 	{
 		char character;
 		double characterConfidence;
+		string description;
 		// More to be added
 	};
 
@@ -17,6 +18,7 @@ public:
 
 	bool initialize();
 	int classify(const string &imagePath, Results &results);
+	int classify(const Mat &imageMat, Results &results);
 	static char getCharFromIdx(int idx);
 
 private:
@@ -26,7 +28,7 @@ private:
 	Session *session;
 
 	void processImage(Mat &image);
-	void classifyCharacterHelper(const Mat &image, char &c, double &confidence);
+	void classifyCharacterHelper(const vector<Mat> &images, vector<char> &chars, vector<double> &confidences);
 	void classifyCharacter(const Mat &image, char &c, double &confidence);
 };
 

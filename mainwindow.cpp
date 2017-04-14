@@ -36,7 +36,6 @@ MainWindow::MainWindow(QWidget *parent) :
     listFiles(exePath, "", files);
 
     QString classifierPath;
-    QString cnnPath;
 
     // Find classifier exe
     for (int i = 0; i < files.size(); ++i)
@@ -485,7 +484,7 @@ void MainWindow::on_consoleCommander_returnPressed()
 
 void MainWindow::on_actionProcess_Image_Set_triggered()
 {
-    ImageSetProcessor *processor = new ImageSetProcessor();
+    ImageSetProcessor *processor = new ImageSetProcessor(cnnPath);
     processor->setModal(true);
     processor->setWindowTitle("Image Processor");
 

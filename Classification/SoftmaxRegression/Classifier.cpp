@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Classifier.h"
 
+#include <chrono>
+#include <ctime>
+
 #include "Segmenter.h"
 #include "Utils.h"
 
@@ -17,8 +20,11 @@ Classifier::Classifier(const string &folderPath, const string &programPath)
 
 Classifier::~Classifier()
 {
-	session->Close();
-	delete session;
+	if (session)
+	{
+		session->Close();
+		delete session;
+	}
 }
 
 bool Classifier::initialize()
@@ -36,13 +42,24 @@ bool Classifier::initialize()
 
 int Classifier::classify(const string &imagePath, Results &results)
 {
+	cv::Mat imageMat = cv::imread(imagePath, CV_LOAD_IMAGE_COLOR);
+	return classify(imageMat, results);
+}
+
+/*
+ * Result returns with confidence == 0 if no suitable character found
+ */
+int Classifier::classify(const Mat &imageMat, Results &results)
+{
 	// call segmenter first
 	// segmentedImages[0] is shape, segmentedImages[1] is letter
-	Segmenter segm(imagePath);
-	vector<cv::Mat> segmentedImages = segm.segment();
+	Segmenter segm("");
+	vector<cv::Mat> segmentedImages = segm.segment(imageMat);
 
 	string savePath = programPath.substr(0, programPath.find_last_of('\\'));
 	bool falsePositiveNoted = false;
+
+	results.characterConfidence = 0;
 
 	//for (unsigned i = 0; i < segmentedImages.size(); ++i)
 	for (unsigned i = 1; i < segmentedImages.size(); ++i) // Second image is always the character
@@ -57,7 +74,6 @@ int Classifier::classify(const string &imagePath, Results &results)
 			continue;
 		}
 
-		cv::imwrite(savePath + "\\label.jpg", segmentedImages[i]);
 		double confidence = 0;
 		char c = '-';
 
@@ -69,7 +85,8 @@ int Classifier::classify(const string &imagePath, Results &results)
 		try
 		{
 			// classify D:\Workspace\UAV\Test Flights\Flight3_output\im0027roi0.jpg
-			cv::Mat image = cv::imread(savePath + "\\label.jpg", cv::IMREAD_GRAYSCALE);
+			cv::Mat image(segmentedImages[i].rows, segmentedImages[i].cols, CV_8UC1);
+			segmentedImages[i].convertTo(image, CV_8UC1);
 			classifyCharacter(image, c, confidence);
 		}
 		catch (cv::Exception &e)
@@ -86,7 +103,10 @@ int Classifier::classify(const string &imagePath, Results &results)
 			results.character = c;
 			results.characterConfidence = confidence;
 
-			cout << "Classified as " << c << " with " << confidence << " confidence" << endl;
+			std::stringstream ss;
+			ss << "Classified as " << c << " with " << confidence << " confidence";
+			results.description = ss.str();
+			cout << results.description << endl;
 		}
 	}
 
@@ -95,45 +115,68 @@ int Classifier::classify(const string &imagePath, Results &results)
 
 void Classifier::classifyCharacter(const Mat &image, char &c, double &confidence)
 {
-	int numRots = 3;
+	int numRots = 4;
 	confidence = 0;
+	vector<Mat> images;
 	for (int rotIdx = 0; rotIdx < numRots; ++rotIdx)
 	{
-		double angle = (rotIdx - (int)(numRots / 2)) * 5;
+		double angle = (rotIdx - (int)(numRots / 2)) * 4;
 		Mat rotated = Utils::rotateImage(image, angle);
 		processImage(rotated);
+		images.push_back(rotated);
+	}
 
-		char cTemp = '-';
-		double confidenceTemp = 0;
-		classifyCharacterHelper(rotated, cTemp, confidenceTemp);
+	vector<char> chars;
+	vector<double> confidences;
+	classifyCharacterHelper(images, chars, confidences);
 
-		if (confidenceTemp >= confidence)
+	// Get the best confidence
+	confidence = confidences[0];
+	c = chars[0];
+	for (int i = 1; i < confidences.size(); ++i)
+	{
+		if (confidences[i] >= confidence)
 		{
-			confidence = confidenceTemp;
-			c = cTemp;
+			confidence = confidences[i];
+			c = chars[i];
 		}
 	}
 }
 
 /*
  * Requires a 40x40 black and white binary image
+ * This function can take in multiple inputs (as a batch) and outputs multiple results
  */
-void Classifier::classifyCharacterHelper(const Mat &image, char &c, double &confidence)
+void Classifier::classifyCharacterHelper(const vector<Mat> &images, // Inputs
+										 vector<char> &chars, vector<double> &confidences) // Outputs
 {
-	// Convert the image to tensor
-	Tensor inputTensor(tensorflow::DT_FLOAT, TensorShape({ 1, image.rows * image.cols }));
+	assert(images.size() > 0);
+	assert(chars.size() == 0);
+	assert(confidences.size() == 0);
+
+	// Timing parameters
+	std::chrono::time_point<std::chrono::system_clock> start, end;
+
+	// Init input tensor dimensions
+	Tensor inputTensor(tensorflow::DT_FLOAT,
+					   TensorShape({ (long long)images.size(), images[0].rows * images[0].cols }));
 	auto inputTensorMapped = inputTensor.tensor<float, 2>();
-	int j = 0;
-	for (int r = 0; r < image.rows; ++r)
+
+	// Copy images to tensor
+	for (int imgIdx = 0; imgIdx < images.size(); ++imgIdx)
 	{
-		for (int c = 0; c < image.cols; ++c, ++j)
+		int j = 0;
+		for (int r = 0; r < images[imgIdx].rows; ++r)
 		{
-			float value = (float)image.at<unsigned char>(r, c);
-			inputTensorMapped(0, j) = value;
+			for (int c = 0; c < images[imgIdx].cols; ++c, ++j)
+			{
+				float value = (float)images[imgIdx].at<unsigned char>(r, c);
+				inputTensorMapped(imgIdx, j) = value;
+			}
 		}
 	}
 
-	// Set keep prob to 1
+	// Set keep_prob to 1
 	Tensor keepProb(tensorflow::DT_FLOAT, TensorShape());
 	keepProb.scalar<float>()() = 1.0;
 
@@ -142,41 +185,59 @@ void Classifier::classifyCharacterHelper(const Mat &image, char &c, double &conf
 		{ "keep_prob", keepProb }
 	};
 
-	// Get the output
 	std::vector<Tensor> outputs;
+	
+	// Get the output
+	start = std::chrono::system_clock::now();
 	TF_CHECK_OK(session->Run(inputs, { "out_node" }, {}, &outputs));
+	end = std::chrono::system_clock::now();
+
+	// Calculate time
+	std::chrono::duration<double> elapsed_seconds = end - start;
+	//std::cout << "Elapsed time: " << elapsed_seconds.count() << " seconds" << std::endl;
 
 	assert(outputs.size() == 1);
 	auto outputMapped = outputs[0].tensor<float, 2>();
 
+	assert(outputs[0].shape().dim_sizes().at(0) == images.size());
 	int numClasses = outputs[0].shape().dim_sizes().at(1);
 
-	// Get the max and confidence
-	int id = 0;
-	double max = outputMapped(0, 0);
-	double denominator = 0;
-	double numerator = 0;
-	for (int idx = 0; idx < numClasses; ++idx)
+	// Loop through the results and get the highest one
+	for (int imgIdx = 0; imgIdx < images.size(); ++imgIdx)
 	{
-		double value = outputMapped(0, idx);
-		double exponent = std::exp(value);
-		if (std::isnan(exponent))
+		// Get the max and confidence of the current image
+		int id = 0;
+		double max = outputMapped(imgIdx, 0);
+		double denominator = 0;
+		double numerator = 0;
+		for (int idx = 0; idx < numClasses; ++idx)
 		{
-			exponent = 10000000;
+			double value = outputMapped(imgIdx, idx);
+
+			// Compute the exponent
+			double exponent = std::exp(value);
+			if (std::isnan(exponent))
+			{
+				exponent = 10000000;
+			}
+
+			if (value >= max)
+			{
+				numerator = exponent;
+				max = value;
+				id = idx;
+			}
+
+			denominator += exponent;
 		}
 
-		if (value >= max)
-		{
-			numerator = exponent;
-			max = value;
-			id = idx;
-		}
+		char c = getCharFromIdx(id);
+		double confidence = numerator / denominator;
+		chars.push_back(c);
+		confidences.push_back(confidence);
 
-		denominator += exponent;
+		//std::cout << "DEBUG: " << c << " | " << confidence << std::endl;
 	}
-
-	confidence = numerator / denominator;
-	c = getCharFromIdx(id);
 }
 
 /*

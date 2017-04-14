@@ -84,11 +84,33 @@ void Utils::cropImage(Mat& image)
 	}
 }
 
-bool Utils::allInOneClassify(const Mat& image, Classifier *classifier)
+bool Utils::allInOneClassify(const Mat& image, Classifier *classifier, string &description)
 {
 	assert(classifier != NULL);
+	assert(!image.empty());
 
-	//classifier->classify()
+	// Test if barcode
+	Mat grayscale(image.rows, image.cols, CV_8UC1);
+	cv::cvtColor(image, grayscale, cv::COLOR_RGB2GRAY);
+	BarcodeReader barcodeReader;
+	string barcodeResult = barcodeReader.scanImage(grayscale);
+	if (barcodeResult != "")
+	{
+		description = barcodeResult;
+		return true;
+	}
 
+	Classifier::Results results;
+	classifier->classify(image, results);
+
+	cout << results.characterConfidence << endl;
+	if (results.characterConfidence != 0)
+	{
+		description = results.description;
+		return true;
+	}
+
+	// Did not classify as anything
+	description = "Unclassified";
 	return true;
 }

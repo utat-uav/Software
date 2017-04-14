@@ -21,7 +21,7 @@ class ImageSetProcessor : public QDialog
 public:
     static void listFiles(QDir directory, QString indent, QList<QString> &files);
 
-    explicit ImageSetProcessor(QWidget *parent = 0);
+    explicit ImageSetProcessor(const QString &cnnPath, QWidget *parent = 0);
     ~ImageSetProcessor();
 
 private slots:
@@ -43,6 +43,7 @@ private:
     Ui::ImageSetProcessor *ui;
 
     std::atomic<bool> isProcessing;
+    QString cnnPath;
     ProcessThread *worker;
 };
 
@@ -53,8 +54,10 @@ class ProcessThread : public QThread
 {
     Q_OBJECT
 public:
-    ProcessThread(const QString &imageFolder, const QString &gpsLogFolder, const QString &outputFolder)
-        : imageFolder(imageFolder), gpsLogFolder(gpsLogFolder), outputFolder(outputFolder), process(true)
+    ProcessThread(const QString &imageFolder, const QString &gpsLogFolder,
+                  const QString &outputFolder, const QString &cnnPath, bool aio)
+        : imageFolder(imageFolder), gpsLogFolder(gpsLogFolder),
+          outputFolder(outputFolder), cnnPath(cnnPath), process(true), aio(aio)
     {}
 
     std::atomic<bool> process;
@@ -65,6 +68,9 @@ protected:
     QString imageFolder;
     QString gpsLogFolder;
     QString outputFolder;
+    QString cnnPath;
+
+    std::atomic<bool> aio;
 };
 
 #endif // IMAGESETPROCESSOR_H

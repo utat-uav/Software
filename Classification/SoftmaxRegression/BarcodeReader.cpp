@@ -11,7 +11,16 @@ BarcodeReader::~BarcodeReader()
 {
 }
 
-void BarcodeReader::scanImage(string imagePath)
+string BarcodeReader::scanImage(const string &imagePath)
+{
+	Mat image = imread(imagePath, CV_LOAD_IMAGE_GRAYSCALE);
+	return scanImage(image);
+}
+
+/*
+ * Requires grayscale image
+ */
+string BarcodeReader::scanImage(const Mat &image)
 {
 	// Create a reader
 	ImageScanner scanner;
@@ -19,12 +28,10 @@ void BarcodeReader::scanImage(string imagePath)
 	// Configure the reader
 	scanner.set_config(ZBAR_NONE, ZBAR_CFG_ENABLE, 1);
 
-	// Get image
-	Mat image = imread(imagePath, CV_LOAD_IMAGE_GRAYSCALE);
 	//cvtColor(image, image, CV_BGR2GRAY); // Crashes if not BGR
 	int width = image.cols;
 	int height = image.rows;
-	uchar *raw = (uchar *) image.data;
+	uchar *raw = (uchar *)image.data;
 
 	// Wrap image
 	zbar::Image zImage(width, height, "Y800", raw, width*height);
@@ -33,11 +40,15 @@ void BarcodeReader::scanImage(string imagePath)
 
 	// Extract results
 	int numResults = 0;
+	string resultstr = "";
 	for (Image::SymbolIterator symbol = zImage.symbol_begin(); symbol != zImage.symbol_end(); ++symbol)
 	{
 		// do something useful with results
-		cout << symbol->get_type_name()
-			<< " result \"" << symbol->get_data() << '"' << endl;
+		stringstream ss;
+		ss << symbol->get_type_name()
+			<< " result \"" << symbol->get_data() << '\"';
+		resultstr = ss.str();
+		cout << resultstr << endl;
 		++numResults;
 	}
 
@@ -48,4 +59,6 @@ void BarcodeReader::scanImage(string imagePath)
 
 	// Clean up
 	zImage.set_data(NULL, 0);
+
+	return resultstr;
 }

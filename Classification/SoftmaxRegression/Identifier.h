@@ -16,7 +16,7 @@ public:
 		{
 			sizeOfROI = 300;
 			minPointsInCluster = 5;
-			maxArea = 120000;
+			maxArea = 80000;
 			minArea = 800;
 			cropPadding = 3;
 		}
@@ -44,6 +44,7 @@ public:
 		int y;
 		int size;
 		LatLon coords = LatLon(0,0);
+		string description;
 	};
 
 	void analyze();

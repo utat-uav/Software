@@ -76,10 +76,20 @@ void Identifier::analyze()
 	double colScale = (double)image.cols / constSize;
 
 	// Create MSER
-	cv::Ptr<cv::MSER> mser = cv::MSER::create(5,
+	/*
+	CV_WRAP static Ptr<MSER> create( int _delta=5,
+									int _min_area=60,
+									int _max_area=14400,
+									double _max_variation=0.25, double _min_diversity=.2,
+									int _max_evolution=200, double _area_threshold=1.01,
+									double _min_margin=0.003, int _edge_blur_size=5 );
+	*/
+
+	cv::Ptr<cv::MSER> mser = cv::MSER::create(6,
 		params.minArea / (double)2738 * constSize,
 		params.maxArea / (double)2738 * constSize,
 		0.099, 0.65, 200, 1.01, 0.003, 5);
+
 
 	// Split hsv channels
 	cv::Mat hsv[3];
@@ -152,13 +162,23 @@ void Identifier::analyze()
 		// Do crop
 		cv::Mat crop = image(roi);
 
+		// Check color
+		cv::Scalar meanColor = cv::mean(crop);
+		double mag = std::sqrt(meanColor[0] * meanColor[0] + meanColor[1] * meanColor[1] + meanColor[2] * meanColor[2]);
+		if (mag < 50)
+		{
+			continue;
+		}
+
 		// Check if valid by doing all the classification tests
 		if (allInOne)
 		{
-			if (!Utils::allInOneClassify(crop, classifier))
+			string description;
+			if (!Utils::allInOneClassify(crop, classifier, description))
 			{
 				continue;
 			}
+			cropResult.description = description;
 		}
 
 		// Write image
@@ -364,6 +384,8 @@ void Identifier::writeCropResults(const std::vector<CropResult> &cropResults)
 		results->append("X=" + std::to_string(cropResults[i].x) + "\n");
 		results->append("Y=" + std::to_string(cropResults[i].y) + "\n");
 		results->append("Size=" + std::to_string(cropResults[i].size) + "\n");
+
+		results->append("Description=" + cropResults[i].description + "\n");
 
 		LatLon coords = cropResults[i].coords;
 		results->append("latitude=" + std::to_string(coords.lat) + "\n");

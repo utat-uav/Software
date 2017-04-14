@@ -189,17 +189,29 @@ void runSegmenter(const string &fileName)
 	Segmenter segm(fileName);
 	vector<cv::Mat> segmentedImages = segm.segment();
 
-	int i = 0;
-	for (vector<cv::Mat>::iterator it = segmentedImages.begin(); it != segmentedImages.end(); ++it)
+	try
 	{
-		++i;
-		std::ostringstream stringStream;
-		stringStream << "Image " << i;
-		std::string copyOfStr = stringStream.str();
-		cv::imshow(copyOfStr, (*it) * 255);
+		int i = 0;
+		for (vector<cv::Mat>::iterator it = segmentedImages.begin(); it != segmentedImages.end(); ++it)
+		{
+			if (it->empty())
+			{
+				continue;
+			}
+
+			++i;
+			std::ostringstream stringStream;
+			stringStream << "Image " << i;
+			std::string copyOfStr = stringStream.str();
+			cv::imshow(copyOfStr, (*it) * 255);
+		}
+		if (i > 0)
+		{
+			cv::waitKey(0);
+		}
 	}
-	if (i > 0)
+	catch (cv::Exception& e)
 	{
-		cv::waitKey(0);
+		std::cout << e.what() << std::endl;
 	}
 }

@@ -4,8 +4,9 @@
 #include <QCloseEvent>
 #include <QDebug>
 
-ImageSetProcessor::ImageSetProcessor(QWidget *parent) :
+ImageSetProcessor::ImageSetProcessor(const QString &cnnPath, QWidget *parent) :
     QDialog(parent),
+    cnnPath(cnnPath),
     ui(new Ui::ImageSetProcessor)
 {
     ui->setupUi(this);
@@ -106,7 +107,14 @@ void ProcessThread::run()
 
         // Get args
         QStringList args;
-        args << "-identify" << images[i] << gpsLogFolder << outputFolder;
+        if (!aio)
+        {
+            args << "-identify" << images[i] << gpsLogFolder << outputFolder;
+        }
+        else
+        {
+            args << "-aio" << images[i] << gpsLogFolder << outputFolder << cnnPath;
+        }
 
         // Make Process
         QProcess scriptProcess;
@@ -134,7 +142,8 @@ void ImageSetProcessor::on_processButton_clicked()
         return;
     }
 
-    worker = new ProcessThread(imageFolder, gpsLogFolder, outputFolder);
+    worker = new ProcessThread(imageFolder, gpsLogFolder,
+                               outputFolder, cnnPath, ui->aioCheckbox->isChecked());
 
     this->setEnabled(false);
     isProcessing = true;

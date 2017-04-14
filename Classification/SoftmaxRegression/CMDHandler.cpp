@@ -119,10 +119,10 @@ void CMDHandler::startCMDInput()
 				continue;
 			}
 
-			cout << imagePath << endl;
-
 			BarcodeReader barcodeReader;
 			barcodeReader.scanImage(imagePath);
+
+			cout << endl;
 		}
 		else if (command == "exit")
 		{

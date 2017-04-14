@@ -5,7 +5,8 @@ class BarcodeReader
 {
 public:
 	BarcodeReader();
-	void scanImage(string imagePath);
+	string scanImage(const string &imagePath);
+	string scanImage(const Mat &image);
 	~BarcodeReader();
 };
 
