@@ -53,7 +53,7 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 {
 	// call segmenter first
 	// segmentedImages[0] is shape, segmentedImages[1] is letter
-	Segmenter segm("");
+	Segmenter segm;
 	vector<cv::Mat> segmentedImages = segm.segment(imageMat);
 
 	string savePath = programPath.substr(0, programPath.find_last_of('\\'));

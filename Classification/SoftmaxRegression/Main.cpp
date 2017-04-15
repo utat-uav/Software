@@ -186,8 +186,8 @@ void runAioIdentifier(const string &fileName, const string &gpsLog, const string
 
 void runSegmenter(const string &fileName)
 {
-	Segmenter segm(fileName);
-	vector<cv::Mat> segmentedImages = segm.segment();
+	Segmenter segm;
+	vector<cv::Mat> segmentedImages = segm.segment(fileName);
 
 	try
 	{

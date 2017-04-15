@@ -6,11 +6,9 @@
 class Segmenter
 {
 public:
-	Segmenter(std::string fileName, std::string outputFolder = "dont_write_output");
+	Segmenter(std::string outputFolder = "dont_write_output");
 	~Segmenter();
 
-	// uses default fileName
-	std::vector<cv::Mat> segment();
 	std::vector<cv::Mat> segment(cv::Mat image);
 	std::vector<cv::Mat> segment(string path);
 
@@ -21,13 +19,13 @@ private:
 		Params()
 		{
 			shape_area_threshold = 0.05;
-			letter_area_threshold = 0.1;
+			letter_area_threshold = 0.05;
 			border_threshold = 0.2;
 			max_blobs_allowed = 10;
 			max_clusters = 3;
 			max_num_kmeans_iter = 40;
 			max_kmeans_epsilon = 1.0;
-			min_image_sidelength = 100;   // will upscale if criteria not met
+			fixed_image_width = 150;   
 			kmeans_terminator = cv::TermCriteria(
 				cv::TermCriteria::COUNT + cv::TermCriteria::EPS,
 				max_num_kmeans_iter,
@@ -35,26 +33,25 @@ private:
 				);
 		}
 
-		// in terms of percentages (e.g letter threshold is % of shape area)
+		// as a ratio out of 1 (e.g letter threshold is 0.05 = 5% of shape area)
 		float shape_area_threshold;
 		float letter_area_threshold;
 		float border_threshold;
 
 		// other parameters
 		int max_blobs_allowed;
-		int min_image_sidelength;
+		int fixed_image_width;
 		int max_clusters;
 		int max_num_kmeans_iter;
 		double max_kmeans_epsilon;
-		std::string imagePath;
-		std::string outputfolder;
+		std::string outputFolder;
 		cv::TermCriteria kmeans_terminator;
 	};
 
 	Params params;
 
 	// if false positive, return empty matrices (emptyMat, emptyMat)
-	// if a promising shape is found, returns (shape, emptyMat) in pair
+	// if only a promising shape is found, returns (shape, emptyMat) in pair
 	// if both shape and letter are found, returns (shape, letter) in pair
 	// pixel = 1 associated with shape/letter, pixel != 1 otherwise (might not be 0)
 	std::pair<cv::Mat, cv::Mat> analyzeLabels(cv::Mat kmeans_labels, int num_rows);

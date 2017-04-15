@@ -2,19 +2,13 @@
 #include "Segmenter.h"
 
 
-Segmenter::Segmenter(std::string fileName, std::string outputFolder)
+Segmenter::Segmenter(std::string outputFolder)
 {
-	params.imagePath = fileName;
-	params.outputfolder = outputFolder;
+	params.outputFolder = outputFolder;
 }
 
 Segmenter::~Segmenter()
 {
-}
-
-std::vector<cv::Mat> Segmenter::segment()
-{
-	return segment(params.imagePath);
 }
 
 std::vector<cv::Mat> Segmenter::segment(string path)
@@ -37,9 +31,9 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 {
 	cv::Mat luv_im;
 
-	// if the image is too small, up-scale by 2
-	if (min(test_im.cols, test_im.rows) <= params.min_image_sidelength)
-		cv::resize(test_im, test_im, cv::Size(0, 0), 2.0, 2.0, 2);
+	// rescale the image to have a fixed width (keeping aspect ratio)
+	float scale_ratio = float(params.fixed_image_width) / test_im.cols;
+	cv::resize(test_im, test_im, cv::Size(0, 0), scale_ratio, scale_ratio, cv::INTER_CUBIC);
 
 	// blur, then convert to luv
 	cv::medianBlur(test_im, test_im, 3);
@@ -52,15 +46,16 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 	cv::Mat mylabels;
 	cv::kmeans(luv_im_res, params.max_clusters, mylabels, params.kmeans_terminator, params.max_num_kmeans_iter, cv::KMEANS_RANDOM_CENTERS);
 
-	// Look at initial labels, for testing purposes
-	std::vector<cv::Mat> mylabels_type;
-	for (int i = 0; i < 3; ++i)
+	if (params.outputFolder != "dont_write_output")
 	{
-		//multiply by 255 as all values from isolateLabel range from 0 - 1
-		mylabels_type.push_back(255 * isolateLabel(mylabels, test_im.rows, i));
-
-		if (params.outputfolder != "dont_write_output")
-			cv::imwrite(params.outputfolder + "\\initial_label" + to_string(i) + ".jpg", mylabels_type[i]);
+		// Look at initial labels, for testing purposes
+		std::vector<cv::Mat> mylabels_type;
+		for (int i = 0; i < 3; ++i)
+		{
+			//multiply by 255 as all values from isolateLabel range from 0 - 1
+			mylabels_type.push_back(255 * isolateLabel(mylabels, test_im.rows, i));
+			cv::imwrite(params.outputFolder + "\\initial_label" + to_string(i) + ".jpg", mylabels_type[i]);
+		}
 	}
 
 	bool try_again = true;
@@ -89,8 +84,8 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 					masked.at<Vec3b>(i, j) = Vec3b(0, 0, 0);
 			}
 
-			if (params.outputfolder != "dont_write_output")
-				cv::imwrite(params.outputfolder + "\\masked_im.jpg", masked);
+			if (params.outputFolder != "dont_write_output")
+				cv::imwrite(params.outputFolder + "\\masked_im.jpg", masked);
 
 			masked_res = masked.reshape(1, test_im.rows * test_im.cols);
 			masked_res.convertTo(masked_res, CV_32FC2);
@@ -101,14 +96,14 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 		}
 	}
 
-	if (params.outputfolder != "dont_write_output")
+	if (params.outputFolder != "dont_write_output")
 	{
-		cv::imwrite(params.outputfolder + "\\luv_im.jpg", luv_im);
+		cv::imwrite(params.outputFolder + "\\luv_im.jpg", luv_im);
 
 		if (!results.first.empty())
-			cv::imwrite(params.outputfolder + "\\retrieved_shape.jpg", 255 * results.first);
+			cv::imwrite(params.outputFolder + "\\retrieved_shape.jpg", 255 * results.first);
 		if (!results.second.empty())
-			cv::imwrite(params.outputfolder + "\\retrieved_letter.jpg", 255 * results.second);
+			cv::imwrite(params.outputFolder + "\\retrieved_letter.jpg", 255 * results.second);
 	}
 
 	cv::Mat mylabels_res = mylabels.reshape(0, test_im.rows);
@@ -257,7 +252,6 @@ std::pair<cv::Mat, bool> Segmenter::retrieveLetter(cv::Mat& shape, int shape_are
 
 	if (win_id == -1)
 		return std::make_pair(cv::Mat(), false);
-
 
 	// retrieve the letter
 	cv::Mat letter = shape.clone();
