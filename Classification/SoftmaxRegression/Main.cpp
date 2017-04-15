@@ -15,7 +15,7 @@ void runCNN(const string &path, const string &programPath);
 void runZBar(const string &path);
 void runIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder);
 void runAioIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder, const string &programPath, const string &cnnPath);
-void runSegmenter(const string &fileName);
+void runSegmenter(const string &fileName, const string &outputFolder = "dont_write_output");
 
 
 //--------------------------------------------------------------------
@@ -110,7 +110,16 @@ int main(int argc, char** argv)
 		string fileName = argv[2];
 
 		cout << "// STARTING SEGMENTER..." << endl << endl;
-		runSegmenter(fileName);
+
+		if (argc == 4)
+		{
+			string outputFolder = argv[3];
+			runSegmenter(fileName, outputFolder);
+		}
+		else
+		{
+			runSegmenter(fileName);
+		}
 	}
 	else if (mode == "-help")
 	{
@@ -184,9 +193,9 @@ void runAioIdentifier(const string &fileName, const string &gpsLog, const string
 	identifier.analyze();
 }
 
-void runSegmenter(const string &fileName)
+void runSegmenter(const string &fileName, const string &outputFolder)
 {
-	Segmenter segm;
+	Segmenter segm(outputFolder);
 	vector<cv::Mat> segmentedImages = segm.segment(fileName);
 
 	try
