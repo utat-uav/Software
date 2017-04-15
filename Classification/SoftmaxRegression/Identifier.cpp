@@ -71,7 +71,7 @@ void Identifier::analyze()
 	cv::blur(hsvImage, hsvImage, cv::Size(6, 6));
 
 	// Decide on a constant size
-	const int constSize = 1300;
+	const int constSize = 1500;
 	double rowScale = (double)image.rows / constSize;
 	double colScale = (double)image.cols / constSize;
 
@@ -86,8 +86,8 @@ void Identifier::analyze()
 	*/
 
 	cv::Ptr<cv::MSER> mser = cv::MSER::create(6,
-		params.minArea / (double)2738 * constSize,
-		params.maxArea / (double)2738 * constSize,
+		(double)params.minArea / (double)2738 * constSize,
+		(double)params.maxArea / (double)2738 * constSize,
 		0.099, 0.65, 200, 1.01, 0.003, 5);
 
 
@@ -103,6 +103,7 @@ void Identifier::analyze()
 		std::vector<cv::Rect> bboxes;
 		Mat resized(hsv[i].rows, hsv[i].cols, hsv[i].depth());
 		cv::resize(hsv[i], resized, cv::Size(constSize, constSize));
+
 		mser->detectRegions(resized, msers, bboxes);
 		mserResults.insert(mserResults.end(), bboxes.begin(), bboxes.end());
 	}

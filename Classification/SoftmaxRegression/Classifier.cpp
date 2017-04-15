@@ -115,12 +115,12 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 
 void Classifier::classifyCharacter(const Mat &image, char &c, double &confidence)
 {
-	int numRots = 4;
+	int numRots = 18;
 	confidence = 0;
 	vector<Mat> images;
 	for (int rotIdx = 0; rotIdx < numRots; ++rotIdx)
 	{
-		double angle = (rotIdx - (int)(numRots / 2)) * 4;
+		double angle = (rotIdx - (int)(numRots / 2)) * 20;
 		Mat rotated = Utils::rotateImage(image, angle);
 		processImage(rotated);
 		images.push_back(rotated);
