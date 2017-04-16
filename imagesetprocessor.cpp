@@ -7,6 +7,7 @@
 ImageSetProcessor::ImageSetProcessor(const QString &cnnPath, QWidget *parent) :
     QDialog(parent),
     cnnPath(cnnPath),
+    imagesCompleted(0),
     ui(new Ui::ImageSetProcessor)
 {
     ui->setupUi(this);
@@ -89,6 +90,7 @@ void ProcessThread::run()
     // Get files
     QList<QString> images;
     ImageSetProcessor::listFiles(imageFolder, "", images);
+    numImages = images.size();
 
     #pragma omp parallel for
     for (int i = 0; i < images.size(); i++)
@@ -113,7 +115,8 @@ void ProcessThread::run()
         }
         else
         {
-            args << "-aio" << images[i] << gpsLogFolder << outputFolder << cnnPath;
+            QString removeFalsePositivesStr = removeFalsePositives ? "true" : "false";
+            args << "-aio" << images[i] << gpsLogFolder << outputFolder << cnnPath << removeFalsePositivesStr;
         }
 
         // Make Process
@@ -122,6 +125,8 @@ void ProcessThread::run()
         // Start and wait
         scriptProcess.start(classifierPath, args);
         scriptProcess.waitForFinished(-1);
+
+        emit imageDone();
     }
 }
 
@@ -143,7 +148,8 @@ void ImageSetProcessor::on_processButton_clicked()
     }
 
     worker = new ProcessThread(imageFolder, gpsLogFolder,
-                               outputFolder, cnnPath, ui->aioCheckbox->isChecked());
+                               outputFolder, cnnPath, ui->aioCheckbox->isChecked(),
+                               ui->removeFalsePositivesCheckbox->isChecked());
 
     this->setEnabled(false);
     isProcessing = true;
@@ -154,6 +160,13 @@ void ImageSetProcessor::on_processButton_clicked()
         this->setEnabled(true);
         this->isProcessing = false;
         this->worker = NULL;
+        this->ui->progressBar->setValue(0);
+        imagesCompleted = 0;
+    });
+    connect(worker, &ProcessThread::imageDone, this, [=]()
+    {
+        ++this->imagesCompleted;
+        this->ui->progressBar->setValue((double)this->imagesCompleted / worker->numImages * 100);
     });
 
     worker->start();
@@ -185,4 +198,9 @@ void ImageSetProcessor::closeEvent(QCloseEvent *event)
     {
         event->accept();
     }
+}
+
+void ImageSetProcessor::on_aioCheckbox_toggled(bool checked)
+{
+    ui->removeFalsePositivesCheckbox->setEnabled(checked);
 }

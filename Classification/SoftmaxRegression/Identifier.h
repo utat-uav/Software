@@ -7,7 +7,7 @@ class Identifier
 {
 public:
 	Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, std::string *results,
-		double groundLevel = 188.0, string programPath = "", string cnnPath = "");
+		double groundLevel = 188.0, string programPath = "", string cnnPath = "", bool removeFalsePositives = false);
 	virtual ~Identifier();
 
 	struct Params
@@ -57,6 +57,7 @@ private:
 
 	string programPath;
 	string cnnPath;
+	bool removeFalsePositives;
 
 	void readGPSLog();
 	std::string headingToEnglish(double headingDegrees);

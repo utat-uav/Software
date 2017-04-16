@@ -39,9 +39,12 @@ private slots:
 
     void closeEvent(QCloseEvent *event);
 
+    void on_aioCheckbox_toggled(bool checked);
+
 private:
     Ui::ImageSetProcessor *ui;
 
+    std::atomic<int> imagesCompleted;
     std::atomic<bool> isProcessing;
     QString cnnPath;
     ProcessThread *worker;
@@ -55,12 +58,18 @@ class ProcessThread : public QThread
     Q_OBJECT
 public:
     ProcessThread(const QString &imageFolder, const QString &gpsLogFolder,
-                  const QString &outputFolder, const QString &cnnPath, bool aio)
-        : imageFolder(imageFolder), gpsLogFolder(gpsLogFolder),
-          outputFolder(outputFolder), cnnPath(cnnPath), process(true), aio(aio)
+                  const QString &outputFolder, const QString &cnnPath, bool aio,
+                  bool removeFalsePositives)
+        : imageFolder(imageFolder), gpsLogFolder(gpsLogFolder), numImages(0),
+          outputFolder(outputFolder), cnnPath(cnnPath), process(true), aio(aio),
+          removeFalsePositives(removeFalsePositives)
     {}
 
     std::atomic<bool> process;
+    std::atomic<int> numImages;
+
+signals:
+    void imageDone();
 
 protected:
     void run();
@@ -71,6 +80,7 @@ protected:
     QString cnnPath;
 
     std::atomic<bool> aio;
+    std::atomic<bool> removeFalsePositives;
 };
 
 #endif // IMAGESETPROCESSOR_H

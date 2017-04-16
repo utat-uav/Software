@@ -112,5 +112,5 @@ bool Utils::allInOneClassify(const Mat& image, Classifier *classifier, string &d
 
 	// Did not classify as anything
 	description = "Unclassified";
-	return true;
+	return false;
 }

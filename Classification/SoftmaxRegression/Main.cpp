@@ -14,7 +14,8 @@ void credits();
 void runCNN(const string &path, const string &programPath);
 void runZBar(const string &path);
 void runIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder);
-void runAioIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder, const string &programPath, const string &cnnPath);
+void runAioIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder,
+	const string &programPath, const string &cnnPath, bool removeFalsePositives);
 void runSegmenter(const string &fileName, const string &outputFolder = "dont_write_output");
 
 
@@ -69,7 +70,7 @@ int main(int argc, char** argv)
 	}
 	else if (mode == "-aio")
 	{
-		if (argc < 6)
+		if (argc < 7)
 		{
 			cout << "Insufficient arguments. Exiting program..." << endl;
 			return -1;
@@ -81,8 +82,10 @@ int main(int argc, char** argv)
 		string gpsLog = argv[3];
 		string outputFolder = argv[4];
 		string cnnPath = argv[5];
+		string removeFalsePositives = argv[6];
 
-		runAioIdentifier(fileName, gpsLog, outputFolder, programPath, cnnPath);
+		runAioIdentifier(fileName, gpsLog, outputFolder, programPath,
+			cnnPath, removeFalsePositives == "true");
 	}
 	else if (mode == "-identify")
 	{
@@ -151,7 +154,7 @@ void credits()
 	cout << "                   [-zbar <imagepath>] to read barcode" << endl;
 	cout << "                   [-segment <imagepath>] to run the segmenter" << endl;
 	cout << "                   [-identify <imagepath> <gpsLog> <outputFolder>] to identify and crop" << endl;
-	cout << "                   [-aio <imagepath> <gpsLog> <outputFolder> <cnnPath>] to identify and crop" << endl;
+	cout << "                   [-aio <imagepath> <gpsLog> <outputFolder> <cnnPath> <removeFalsePositives>] to identify and crop" << endl;
 	cout << "                   [-help me] for help" << endl;
 	cout << endl;
 }
@@ -186,10 +189,10 @@ void runIdentifier(const string &fileName, const string &gpsLog, const string &o
 }
 
 void runAioIdentifier(const string &fileName, const string &gpsLog, const string &outputFolder, 
-	const string &programPath, const string &cnnPath)
+	const string &programPath, const string &cnnPath, bool removeFalsePositives)
 {
 	string results;
-	Identifier identifier(fileName, gpsLog, outputFolder, &results, 188.0, programPath, cnnPath);
+	Identifier identifier(fileName, gpsLog, outputFolder, &results, 188.0, programPath, cnnPath, removeFalsePositives);
 	identifier.analyze();
 }
 

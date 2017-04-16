@@ -8,8 +8,9 @@
  * All in one mode means it will perform all of classification and barcode reading
  */
 Identifier::Identifier(const std::string &imagePath, const std::string &gpsLog, const std::string &outputFolder, ::string *results,
-	double groundLevel, string programPath, string cnnPath)
-  : geolocater(75.0, groundLevel), results(results), programPath(programPath), cnnPath(cnnPath)
+	double groundLevel, string programPath, string cnnPath, bool removeFalsePositives)
+  : geolocater(75.0, groundLevel), results(results), programPath(programPath),
+	cnnPath(cnnPath), removeFalsePositives(removeFalsePositives)
 {
 	params.imagePath = imagePath;
 	params.gpsLog = gpsLog;
@@ -102,7 +103,7 @@ void Identifier::analyze()
 		std::vector<std::vector<cv::Point>> msers;
 		std::vector<cv::Rect> bboxes;
 		Mat resized(hsv[i].rows, hsv[i].cols, hsv[i].depth());
-		cv::resize(hsv[i], resized, cv::Size(constSize, constSize));
+		cv::resize(hsv[i], resized, cv::Size(constSize, constSize), 0, 0, cv::INTER_CUBIC);
 
 		mser->detectRegions(resized, msers, bboxes);
 		mserResults.insert(mserResults.end(), bboxes.begin(), bboxes.end());
@@ -166,7 +167,7 @@ void Identifier::analyze()
 		// Check color
 		cv::Scalar meanColor = cv::mean(crop);
 		double mag = std::sqrt(meanColor[0] * meanColor[0] + meanColor[1] * meanColor[1] + meanColor[2] * meanColor[2]);
-		if (mag < 50)
+		if (mag < 35)
 		{
 			continue;
 		}
@@ -175,7 +176,7 @@ void Identifier::analyze()
 		if (allInOne)
 		{
 			string description;
-			if (!Utils::allInOneClassify(crop, classifier, description))
+			if (!Utils::allInOneClassify(crop, classifier, description) && removeFalsePositives)
 			{
 				continue;
 			}
