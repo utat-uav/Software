@@ -472,7 +472,7 @@ void MainWindow::on_tabWidget_tabCloseRequested(int index)
 {
     TargetListWindow* targetListWindow = (TargetListWindow*)ui->tabWidget->widget(index);
     ui->tabWidget->removeTab(index);
-    ((ImageWidget*)targetListWindow->parent)->changeTargetListWindow(NULL, false);
+    dynamic_cast<ImageWidget*>(targetListWindow->parent)->changeTargetListWindow(NULL, false);
     delete targetListWindow;
     if (ui->tabWidget->count()==0)
     {
