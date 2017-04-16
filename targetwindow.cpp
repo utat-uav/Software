@@ -1,7 +1,11 @@
 #include "targetwindow.h"
 #include "ui_targetwindow.h"
 
+#include "targetlistwindow.h"
+#include "imagewidget.h"
+
 #include <QCloseEvent>
+#include <QDebug>
 
 TargetWindow::TargetWindow(LifeSupport *dataPackage, TargetListItem *targetListItem, QWidget *parent) :
     QDialog(parent),
@@ -10,6 +14,8 @@ TargetWindow::TargetWindow(LifeSupport *dataPackage, TargetListItem *targetListI
 {
     this->targetListItem = targetListItem;
     ui->setupUi(this);
+
+    this->parent = (TargetListWindow *)parent;
 
     // Set image
     QPixmap *pix = new QPixmap();
@@ -65,16 +71,23 @@ void TargetWindow::on_classifyButton_pressed()
 void TargetWindow::classify(){
     QString str = dataPackage->consoleOutput->toHtml() ;
     str.remove(0,str.lastIndexOf("Classified as")) ;
-    if ( !str.contains("valid")){
+    if ( !str.contains("valid"))
+    {
         str.truncate(str.indexOf("confidence")+10) ;
         QSettings resultFile(dataPackage->filePath, QSettings::IniFormat);
-        for ( int i = 1 ; i <= resultFile.value("Crop Info/Number of Crops").toInt() ; i ++ ){
+        for ( int i = 1 ; i <= resultFile.value("Crop Info/Number of Crops").toInt() ; i ++ )
+        {
             QString imageName = resultFile.value("Crop "+QString::number(i)+"/Image Name").toString() ;
-            if ( imageName == dataPackage->imagePath ){
+            if ( imageName == dataPackage->imagePath )
+            {
                 resultFile.setValue("Crop "+QString::number(i)+"/Description",str);
             }
         }
         targetListItem->desc->setText(str);
+
+        // Update the internal target data
+        TargetData &target = this->parent->parentWidget->getTarget(dataPackage->imagePath);
+        target.desc = str;
     }
     disconnect(dataPackage->consoleOutput, &QTextBrowser::textChanged, this, &TargetWindow::classify);
     this->setEnabled(true);
@@ -85,17 +98,24 @@ void TargetWindow::classify(){
 void TargetWindow::zbar(){
     QString str = dataPackage->consoleOutput->toHtml() ;
     str.remove(0,str.lastIndexOf("QR-Code result"));
-    if ( !str.contains("valid")){
+    if ( !str.contains("valid"))
+    {
         str.replace("&quot;", "\"");
         str.truncate(str.indexOf("<")) ;
         QSettings resultFile(dataPackage->filePath, QSettings::IniFormat);
-        for ( int i = 1 ; i <= resultFile.value("Crop Info/Number of Crops").toInt() ; i ++ ){
+        for ( int i = 1 ; i <= resultFile.value("Crop Info/Number of Crops").toInt() ; i ++ )
+        {
             QString imageName = resultFile.value("Crop "+QString::number(i)+"/Image Name").toString();
-            if ( dataPackage->imagePath == imageName ){
+            if ( dataPackage->imagePath == imageName )
+            {
                 resultFile.setValue("Crop "+QString::number(i)+"/Description",str);
             }
         }
         targetListItem->desc->setText(str);
+
+        // Update the internal target data
+        TargetData &target = this->parent->parentWidget->getTarget(dataPackage->imagePath);
+        target.desc = str;
     }
     disconnect(dataPackage->consoleOutput, &QTextBrowser::textChanged, this, &TargetWindow::zbar);
     this->setEnabled(true);

@@ -2,12 +2,15 @@
 #include "ui_targetlistwindow.h"
 #include "qevent.h"
 
+#include "imagewidget.h"
+
 TargetListWindow::TargetListWindow(LifeSupport *dataPackage, QWidget *parent) :
     QDialog(parent),
     parent(parent),
     ui(new Ui::TargetListWindow)
 {
     this->loader = NULL;
+    this->parentWidget = (ImageWidget *)parent;
 
     colCount = 5;
     ui->setupUi(this);
@@ -183,7 +186,7 @@ void TargetListWindow::setMainPic (QString imagePath) {
 
 void TargetListWindow::loadTargets(QString folderPath, QString filePath){
     // Starts a new thread to load it
-    loader = new Loader(targetList, folderPath, filePath);
+    loader = new Loader(targetList, this->parentWidget, folderPath, filePath);
     loader->start();
 
     // Get height
@@ -203,35 +206,40 @@ void TargetListWindow::loadTargets(QString folderPath, QString filePath){
                               " | <b>Heading:</b> " + heading +
                               " | <b>Heading (Degrees):</b> " + headingDegrees +
                               "</center>");
-
-    //connect(loader, SIGNAL(finished()), loader, SLOT(deleteLater()));
 }
 
 void Loader::run()
 {
     QSettings resultFile(filePath, QSettings::IniFormat);
-    for ( int i = 1 ; i <= resultFile.value("Crop Info/Number of Crops").toInt() ; i ++ ){
-        if (!this->isInterruptionRequested()) {
-            QString imagePath = resultFile.value("Crop "+QString::number(i)+"/Image Name").toString() ;
-            QString name = imagePath ;
-            QString coord = resultFile.value("Crop "+QString::number(i)+"/X").toString()+", "+resultFile.value("Crop "+QString::number(i)+"/Y").toString() ;
-            int x = resultFile.value("Crop "+QString::number(i)+"/X").toInt();
-            int y = resultFile.value("Crop "+QString::number(i)+"/Y").toInt();
-            QString desc = resultFile.value("Crop "+QString::number(i)+"/Description").toString() ;
-            try {
+    for (int i = 0; i < resultFile.value("Crop Info/Number of Crops").toInt(); ++i)
+    {
+        if (!this->isInterruptionRequested())
+        {
+            QString imagePath = imageWidget->getTargetData()[i].imagePath;
+            QString name = imagePath;
+            QString coord = imageWidget->getTargetData()[i].coord;
+            int x = imageWidget->getTargetData()[i].x;
+            int y = imageWidget->getTargetData()[i].y;
+            QString desc = imageWidget->getTargetData()[i].desc;
+            try
+            {
                 targetList->addNewRow(folderPath+"/"+imagePath,name,coord,desc, x, y);
             }
-            catch (std::exception& e) {
+            catch (std::exception& e)
+            {
                 return;
             }
         }
     }
 
-    if (!this->isInterruptionRequested()) {
-        try {
+    if (!this->isInterruptionRequested())
+    {
+        try
+        {
             targetList->refreshTable();
         }
-        catch (std::exception& e) {
+        catch (std::exception& e)
+        {
             return;
         }
     }
@@ -291,16 +299,19 @@ void TargetListWindow::on_targetListTable_clicked(const QModelIndex &index)
         return NULL ;
 }*/
 
+/*
 void TargetListWindow::changeDesc ( QString desc ) {
     QItemSelectionModel *select = ui->targetListTable->selectionModel();
     QModelIndexList selectedRows = select->selectedRows();
 
-    if (select->hasSelection() && selectedRows.length() == 1) { // only 1 item can be selected
+    if (select->hasSelection() && selectedRows.length() == 1)
+    { // only 1 item can be selected
         QList<QModelIndex>::iterator i = selectedRows.begin();
         int selectedRow = i->row(); // gets the selected row number
         targetList->getRows()->at(selectedRow)->desc->setText(desc);
     }
 }
+*/
 
 CustomLabel::CustomLabel( QWidget* parent, Qt::WindowFlags f )
     : QLabel( parent, f ) {}

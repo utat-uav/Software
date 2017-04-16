@@ -8,6 +8,8 @@
 #include <atomic>
 #include "lifesupport.h"
 
+class TargetListWindow;
+
 namespace Ui {
 class TargetWindow;
 }
@@ -19,6 +21,8 @@ class TargetWindow : public QDialog
 public:
     explicit TargetWindow(LifeSupport* dataPackage, TargetListItem *targetListItem, QWidget *parent = 0);
     ~TargetWindow();
+
+    TargetListWindow *parent;
 
 private slots:
 

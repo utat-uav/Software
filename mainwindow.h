@@ -18,6 +18,8 @@
 #include <QCompleter>
 #include <QMessageBox>
 #include <QStringListModel>
+
+#include "imagewidget.h"
 #include "lifesupport.h"
 #include "imagesetprocessor.h"
 #include "loadingbardialog.h"
@@ -90,7 +92,8 @@ protected:
     void resizeEvent(QResizeEvent *e);
     void resizeTable();
     void addItem(QString filePath);
-    void appendItem(QString folderPath, QString filePath, QString imagePath, QString title, int numTargets);
+    void appendItem(QString folderPath, QString filePath, QString imagePath,
+                    QString title, int numTargets, const QList<TargetData> &targetData);
     void setColumnCount(int col);
     void listFiles(QDir directory, QString indent, QList<QString> &files);
     void indexToCoordinates(int index, int *r, int *c);

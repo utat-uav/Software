@@ -9,12 +9,26 @@
 #include <QMouseEvent>
 #include <QTabWidget>
 #include <QThread>
-#include "mainwindow.h"
+
 #include "lifesupport.h"
+
+class MainWindow;
 
 namespace Ui {
 class ImageWidget;
 }
+
+struct TargetData
+{
+    QString imagePath;
+    QString name;
+    QString coord;
+    int x;
+    int y;
+    double lat;
+    double lon;
+    QString desc;
+};
 
 class ImageWidget : public QWidget
 {
@@ -46,6 +60,7 @@ public:
     void setTabWidget(QTabWidget* tabWidget ) ;
     void setNumTargets(int numTargets);
     void setSeen(bool seen);
+    void setTargetData(const QList<TargetData> &targetData);
 
     // Getters
     QString getTitle() const;
@@ -57,6 +72,9 @@ public:
     int getNumTargets() const;
     bool isInitialized() const;
     bool getSeen() const;
+    QList<TargetData>& getTargetData();
+
+    TargetData &getTarget(const QString &targetName);
 
     void deleteTargetListWindow();
 
@@ -81,6 +99,7 @@ protected:
     bool seen;
     ImageLoader* loader;
     bool loadingFinished;
+    QList<TargetData> targetData;
 
 private slots:
     void on_pinButton_clicked();

@@ -1,6 +1,8 @@
 #include "imagewidget.h"
 #include "ui_imagewidget.h"
 
+#include "mainwindow.h"
+
 int ImageWidget::ImageLoader::numLoaders = 0;
 
 ImageWidget::ImageWidget(LifeSupport *dataPackage, MainWindow *parent, bool initTargetList) :
@@ -71,6 +73,23 @@ bool ImageWidget::getSeen() const
     return this->seen;
 }
 
+QList<TargetData>& ImageWidget::getTargetData()
+{
+    return this->targetData;
+}
+
+TargetData &ImageWidget::getTarget(const QString &targetName)
+{
+    for (int i = 0; i < targetData.size(); ++i)
+    {
+        if (targetData[i].imagePath == targetName)
+        {
+            return targetData[i];
+        }
+    }
+    return targetData[0];
+}
+
 void ImageWidget::setTitle(QString name)
 {
     ui->imageCaption->setText(name);
@@ -84,6 +103,11 @@ void ImageWidget::setSeen(bool seen)
     else
         ui->colourLabel->setStyleSheet("QLabel { background-color : yellow; color : blue; }");
     this->seen = seen;
+}
+
+void ImageWidget::setTargetData(const QList<TargetData> &targetData)
+{
+    this->targetData = targetData;
 }
 
 void ImageWidget::setFolderPath(QString folderPath){
@@ -170,6 +194,10 @@ void ImageWidget::deleteTargetListWindow()
 void ImageWidget::changeTargetListWindow(TargetListWindow* targetList, bool alreadyInitialized)
 {
     this->targetList = targetList;
+    if (targetList)
+    {
+        this->targetList->parentWidget = this;
+    }
     this->targetListInitialized = alreadyInitialized;
 }
 

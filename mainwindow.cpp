@@ -198,6 +198,7 @@ void MainWindow::refreshTable()
         temp->setImage(items[i]->getImage());
         temp->setNumTargets(items[i]->getNumTargets());
         temp->setSeen(items[i]->getSeen());
+        temp->setTargetData(items[i]->getTargetData());
 
         // Preserve the old targetList window
         temp->deleteTargetListWindow();
@@ -262,7 +263,8 @@ QList<ImageWidget*>& MainWindow::getItems()
     return this->items;
 }
 
-void MainWindow::appendItem(QString folderPath, QString filePath, QString imagePath, QString title, int numTargets)
+void MainWindow::appendItem(QString folderPath, QString filePath, QString imagePath,
+                            QString title, int numTargets, const QList<TargetData> &targetData)
 {
     // Creates item
     ImageWidget *newWidget = new ImageWidget(dataPackage, this, false);
@@ -271,6 +273,7 @@ void MainWindow::appendItem(QString folderPath, QString filePath, QString imageP
     newWidget->setFilePath(filePath);
     newWidget->setFolderPath(folderPath);
     newWidget->setNumTargets(numTargets);
+    newWidget->setTargetData(targetData);
     items.append(newWidget);
 }
 
@@ -335,8 +338,6 @@ void MainWindowLoader::run()
     QDir directory(dir);
     QStringList fileList = directory.entryList(nameFilter);
 
-    qDebug() << "HI";
-
     // Goes through each file and opening the image
     int count = 0;
     foreach (QString file, fileList)
@@ -350,7 +351,23 @@ void MainWindowLoader::run()
 
         if (imagePath != "")
         {
-            mainWindow->appendItem(dir, filePath, imagePath, filename, numTargets);
+            // Read target details
+            QList<TargetData> targetData;
+            for ( int i = 1 ; i <= resultFile.value("Crop Info/Number of Crops").toInt() ; ++i)
+            {
+                TargetData target;
+                target.imagePath = resultFile.value("Crop " + QString::number(i)+"/Image Name").toString();
+                target.name = imagePath ;
+                target.coord = resultFile.value("Crop "+QString::number(i)+"/X").toString()+", "+resultFile.value("Crop "+QString::number(i)+"/Y").toString();
+                target.x = resultFile.value("Crop "+QString::number(i)+"/X").toInt();
+                target.y = resultFile.value("Crop "+QString::number(i)+"/Y").toInt();
+                target.lat = resultFile.value("Crop "+QString::number(i)+"/latitude", 0.0).toDouble();
+                target.lon = resultFile.value("Crop "+QString::number(i)+"/longitude", 0.0).toDouble();
+                target.desc = resultFile.value("Crop "+QString::number(i)+"/Description").toString();
+                targetData.append(target);
+            }
+
+            mainWindow->appendItem(dir, filePath, imagePath, filename, numTargets, targetData);
             ++count;
             if (count%5 == 0)
             {
@@ -370,7 +387,8 @@ void MainWindow::on_editButton_clicked()
     QItemSelectionModel *select = ui->photoListTable->selectionModel();
     QModelIndexList selected = select->selectedIndexes();
 
-    if (select->hasSelection() && selected.length() == 1) {
+    if (select->hasSelection() && selected.length() == 1)
+    {
         // Gets the selected index
         QList<QModelIndex>::iterator i = selected.begin();
         int selectedIndex = (i->row())*colCount + i->column();
@@ -388,7 +406,8 @@ void MainWindow::on_editButton_clicked()
         editDialog->exec();
 
         // If okay was pressed in the edit dialog
-        if (editDialog->getAccepted()) {
+        if (editDialog->getAccepted())
+        {
             // Gets information from edit dialog
             QString title = editDialog->getTitle();
             QString filePath = editDialog->getFilePath();
@@ -513,6 +532,7 @@ void MainWindow::on_actionOnly_images_with_targets_triggered()
                 cpy->setImage(items[i]->getImage());
                 cpy->setNumTargets(items[i]->getNumTargets());
                 cpy->setSeen(items[i]->getSeen());
+                cpy->setTargetData(items[i]->getTargetData());
 
                 itemsNotDisplayed.prepend(cpy);
                 items.removeAt(i);

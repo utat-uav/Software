@@ -12,18 +12,24 @@
 #include <QThread>
 #include "lifesupport.h"
 
+class ImageWidget;
+class TargetListWindow;
+
 // LOADER THREAD
 class Loader : public QThread
 {
 public:
-    explicit Loader(TargetList *targetList, QString folderPath, QString filePath)
+    explicit Loader(TargetList *targetList, ImageWidget *imageWidget,
+                    QString folderPath, QString filePath)
     {
+        this->imageWidget = imageWidget;
         this->targetList = targetList;
         this->folderPath = folderPath;
         this->filePath = filePath;
     }
     void run();
 private:
+    ImageWidget *imageWidget;
     TargetList *targetList;
     QString folderPath, filePath;
 };
@@ -41,11 +47,12 @@ public:
     explicit TargetListWindow(LifeSupport* dataPackage, QWidget *parent = 0);
     Ui::TargetListWindow *ui ;
     QWidget *parent;
+    ImageWidget *parentWidget;
     ~TargetListWindow();
     void setMainPic (QString imagePath) ;
     void loadTargets (QString folderPath, QString filePath) ;
     //QString selected();
-    void changeDesc(QString desc) ;
+    //void changeDesc(QString desc) ;
 
 private slots:
     void on_newItem_clicked();
