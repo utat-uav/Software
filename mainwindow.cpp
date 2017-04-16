@@ -358,7 +358,7 @@ void MainWindowLoader::run()
                 TargetData target;
                 target.imagePath = resultFile.value("Crop " + QString::number(i)+"/Image Name").toString();
                 target.name = imagePath ;
-                target.coord = resultFile.value("Crop "+QString::number(i)+"/X").toString()+", "+resultFile.value("Crop "+QString::number(i)+"/Y").toString();
+                target.coord = resultFile.value("Crop "+QString::number(i)+"/latitude").toString()+", "+resultFile.value("Crop "+QString::number(i)+"/longitude").toString();
                 target.x = resultFile.value("Crop "+QString::number(i)+"/X").toInt();
                 target.y = resultFile.value("Crop "+QString::number(i)+"/Y").toInt();
                 target.lat = resultFile.value("Crop "+QString::number(i)+"/latitude", 0.0).toDouble();
@@ -451,9 +451,12 @@ void MainWindow::on_deleteItemButton_clicked()
 
 void MainWindow::addTab(QWidget* newTab, QString title) {
     if (noTabs)
+    {
         ui->tabWidget->removeTab(0);
+    }
 
-    ui->tabWidget->setCurrentIndex(ui->tabWidget->addTab(newTab, title));
+    int idx = ui->tabWidget->addTab(newTab, title);
+    ui->tabWidget->setCurrentIndex(idx);
     noTabs = false ;
 }
 
@@ -471,7 +474,8 @@ void MainWindow::on_tabWidget_tabCloseRequested(int index)
     ui->tabWidget->removeTab(index);
     ((ImageWidget*)targetListWindow->parent)->changeTargetListWindow(NULL, false);
     delete targetListWindow;
-    if (ui->tabWidget->count()==0){
+    if (ui->tabWidget->count()==0)
+    {
         noTabs = true ;
         //ui->tabWidget->addTab(new TargetListWindow, "Target List") ;
     }

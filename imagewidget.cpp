@@ -1,6 +1,7 @@
 #include "imagewidget.h"
 #include "ui_imagewidget.h"
 
+#include <assert.h>
 #include "mainwindow.h"
 
 int ImageWidget::ImageLoader::numLoaders = 0;
@@ -196,7 +197,7 @@ void ImageWidget::changeTargetListWindow(TargetListWindow* targetList, bool alre
     this->targetList = targetList;
     if (targetList)
     {
-        this->targetList->parentWidget = this;
+        this->targetList->parent = this;
     }
     this->targetListInitialized = alreadyInitialized;
 }
@@ -216,16 +217,21 @@ void ImageWidget::mouseDoubleClickEvent(QMouseEvent *event){
 
         if (targetList == NULL)
         {
+            qDebug() << "making new one";
             targetList = new TargetListWindow(dataPackage, this);
         }
 
-        if (!targetListInitialized) {
+        if (!targetListInitialized)
+        {
             targetList->setMainPic(imagePath);
             targetList->loadTargets(folderPath, filePath) ;
             mainWindow->addTab(targetList, title) ;
             targetListInitialized = true;
         }
-        else {
+        else
+        {
+            assert(targetList->parent == this);
+
             bool found = mainWindow->findTab(targetList) ;
             if (!found)
             {

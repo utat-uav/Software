@@ -86,7 +86,7 @@ void TargetWindow::classify(){
         targetListItem->desc->setText(str);
 
         // Update the internal target data
-        TargetData &target = this->parent->parentWidget->getTarget(dataPackage->imagePath);
+        TargetData &target = dynamic_cast<ImageWidget *>(this->parent->parent)->getTarget(dataPackage->imagePath);
         target.desc = str;
     }
     disconnect(dataPackage->consoleOutput, &QTextBrowser::textChanged, this, &TargetWindow::classify);
@@ -114,7 +114,7 @@ void TargetWindow::zbar(){
         targetListItem->desc->setText(str);
 
         // Update the internal target data
-        TargetData &target = this->parent->parentWidget->getTarget(dataPackage->imagePath);
+        TargetData &target = dynamic_cast<ImageWidget *>(this->parent->parent)->getTarget(dataPackage->imagePath);
         target.desc = str;
     }
     disconnect(dataPackage->consoleOutput, &QTextBrowser::textChanged, this, &TargetWindow::zbar);

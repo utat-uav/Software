@@ -47,7 +47,6 @@ public:
     explicit TargetListWindow(LifeSupport* dataPackage, QWidget *parent = 0);
     Ui::TargetListWindow *ui ;
     QWidget *parent;
-    ImageWidget *parentWidget;
     ~TargetListWindow();
     void setMainPic (QString imagePath) ;
     void loadTargets (QString folderPath, QString filePath) ;

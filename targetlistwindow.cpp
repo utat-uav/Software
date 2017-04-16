@@ -2,6 +2,8 @@
 #include "ui_targetlistwindow.h"
 #include "qevent.h"
 
+#include <QDebug>
+
 #include "imagewidget.h"
 
 TargetListWindow::TargetListWindow(LifeSupport *dataPackage, QWidget *parent) :
@@ -10,7 +12,6 @@ TargetListWindow::TargetListWindow(LifeSupport *dataPackage, QWidget *parent) :
     ui(new Ui::TargetListWindow)
 {
     this->loader = NULL;
-    this->parentWidget = (ImageWidget *)parent;
 
     colCount = 5;
     ui->setupUi(this);
@@ -35,7 +36,8 @@ TargetListWindow::TargetListWindow(LifeSupport *dataPackage, QWidget *parent) :
 
 TargetListWindow::~TargetListWindow()
 {
-    if (loader != 0 && loader->isRunning()) {
+    if (loader != 0 && loader->isRunning())
+    {
         loader->requestInterruption();
         loader->wait();
     }
@@ -184,9 +186,10 @@ void TargetListWindow::setMainPic (QString imagePath) {
 }
 
 
-void TargetListWindow::loadTargets(QString folderPath, QString filePath){
+void TargetListWindow::loadTargets(QString folderPath, QString filePath)
+{
     // Starts a new thread to load it
-    loader = new Loader(targetList, this->parentWidget, folderPath, filePath);
+    loader = new Loader(targetList, dynamic_cast<ImageWidget *>(this->parent), folderPath, filePath);
     loader->start();
 
     // Get height
