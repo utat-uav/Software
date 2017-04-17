@@ -23,7 +23,9 @@ SOURCES += main.cpp\
     targetwindow.cpp \
     lifesupport.cpp \
     imagesetprocessor.cpp \
-    loadingbardialog.cpp
+    loadingbardialog.cpp \
+    missionviewer.cpp \
+    missionview.cpp
 
 HEADERS  += mainwindow.h \
     imagewidget.h \
@@ -35,7 +37,9 @@ HEADERS  += mainwindow.h \
     targetwindow.h \
     lifesupport.h \
     imagesetprocessor.h \
-    loadingbardialog.h
+    loadingbardialog.h \
+    missionviewer.h \
+    missionview.h
 
 FORMS    += mainwindow.ui \
     imagewidget.ui \
@@ -44,7 +48,8 @@ FORMS    += mainwindow.ui \
     targetmaker.ui \
     targetwindow.ui \
     imagesetprocessor.ui \
-    loadingbardialog.ui
+    loadingbardialog.ui \
+    missionviewer.ui
 
 DISTFILES += \
     clasic.png \

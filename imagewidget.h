@@ -18,18 +18,6 @@ namespace Ui {
 class ImageWidget;
 }
 
-struct TargetData
-{
-    QString imagePath;
-    QString name;
-    QString coord;
-    int x;
-    int y;
-    double lat;
-    double lon;
-    QString desc;
-};
-
 class ImageWidget : public QWidget
 {
     Q_OBJECT
@@ -49,6 +37,7 @@ public:
     };
 
     explicit ImageWidget(LifeSupport* dataPackage, MainWindow *parent, bool initTargetList = true);
+    ImageWidget(ImageWidget &toCopy);
 
     // Setters
     void setTitle(QString name);
@@ -60,6 +49,7 @@ public:
     void setTabWidget(QTabWidget* tabWidget ) ;
     void setNumTargets(int numTargets);
     void setSeen(bool seen);
+    void setLatLon(const LatLon &latlon);
     void setTargetData(const QList<TargetData> &targetData);
 
     // Getters
@@ -73,6 +63,7 @@ public:
     bool isInitialized() const;
     bool getSeen() const;
     QList<TargetData>& getTargetData();
+    LatLon getLatLon() const;
 
     TargetData &getTarget(const QString &targetName);
 
@@ -100,6 +91,8 @@ protected:
     ImageLoader* loader;
     bool loadingFinished;
     QList<TargetData> targetData;
+
+    LatLon latlon;
 
 private slots:
     void on_pinButton_clicked();

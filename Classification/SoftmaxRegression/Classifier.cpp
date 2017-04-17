@@ -94,7 +94,8 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 			continue;
 		}
 
-		if (confidence < 0.8)
+		// Anything below 98% is uncertainty that we don't need
+		if (confidence < 0.98)
 		{
 			cout << "Invalid image. Confidence of " << confidence << " for a " << c << " is too low. Likely a false positive ..." << endl;
 		}

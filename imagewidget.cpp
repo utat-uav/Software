@@ -26,8 +26,22 @@ ImageWidget::ImageWidget(LifeSupport *dataPackage, MainWindow *parent, bool init
         targetList = NULL;
     targetListInitialized = false;
 
-
     ui->colourLabel->setStyleSheet("QLabel { background-color : yellow; color : blue; }");
+}
+
+ImageWidget::ImageWidget(ImageWidget &toCopy) :
+    ImageWidget(toCopy.dataPackage, toCopy.mainWindow, false)
+{
+    // Copy all information over
+    this->setTitle(toCopy.getTitle());
+    this->setFilePath(toCopy.getFilePath());
+    this->setFolderPath(toCopy.getFolderPath());
+    this->setImagePath(toCopy.getImagePath());
+    this->setImage(toCopy.getImage());
+    this->setNumTargets(toCopy.getNumTargets());
+    this->setSeen(toCopy.getSeen());
+    this->setTargetData(toCopy.getTargetData());
+    this->setLatLon(toCopy.getLatLon());
 }
 
 ImageWidget::~ImageWidget()
@@ -72,6 +86,11 @@ QString ImageWidget::getFilePath() const
 bool ImageWidget::getSeen() const
 {
     return this->seen;
+}
+
+LatLon ImageWidget::getLatLon() const
+{
+    return this->latlon;
 }
 
 QList<TargetData>& ImageWidget::getTargetData()
@@ -122,6 +141,11 @@ void ImageWidget::setFilePath(QString filePath){
 void ImageWidget::setImagePath(QString imagePath)
 {
     this->imagePath = imagePath;
+}
+
+void ImageWidget::setLatLon(const LatLon &latlon)
+{
+    this->latlon = latlon;
 }
 
 void ImageWidget::setNumTargets(int numTargets)

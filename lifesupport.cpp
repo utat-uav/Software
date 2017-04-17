@@ -10,3 +10,10 @@ LifeSupport::~LifeSupport(){
     delete consoleOutput;
 }
 
+/*
+ * avg is in degrees
+ */
+QPointF LatLon::convertToXY(double avgLat)
+{
+    return QPointF(lon * std::cos(avgLat * DEG_TO_RAD), lat);
+}

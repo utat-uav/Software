@@ -24,12 +24,12 @@
 #include "imagesetprocessor.h"
 #include "loadingbardialog.h"
 
+class MissionViewer;
+
 namespace Ui {
 class MainWindow;
 }
 class ImageWidget ;
-
-class MainWindow;
 
 // LOADER THREAD
 class MainWindowLoader : public QThread
@@ -88,12 +88,15 @@ private slots:
 
     void on_actionOnly_images_with_targets_triggered();
 
+    void on_actionMission_triggered();
+
 protected:
     void resizeEvent(QResizeEvent *e);
     void resizeTable();
     void addItem(QString filePath);
     void appendItem(QString folderPath, QString filePath, QString imagePath,
-                    QString title, int numTargets, const QList<TargetData> &targetData);
+                    QString title, int numTargets, const QList<TargetData> &targetData,
+                    const LatLon &latlon);
     void setColumnCount(int col);
     void listFiles(QDir directory, QString indent, QList<QString> &files);
     void indexToCoordinates(int index, int *r, int *c);
@@ -116,6 +119,8 @@ private:
     bool noTabs; //if no images are open or if all of them are closed
     QString cnnPath;
     std::atomic<bool> loading;
+
+    MissionViewer *missionViewer;
 };
 
 #endif // MAINWINDOW_H

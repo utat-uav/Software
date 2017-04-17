@@ -1,7 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
 #include "imagewidget.h"
 #include "loadingbardialog.h"
+#include "missionviewer.h"
 
 #include <QSettings>
 
@@ -69,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
     dataPackage = new LifeSupport(classifier,ui->consoleOutput);
 
     loadingBarDialog = new LoadingBarDialog(this);
+
+    missionViewer = new MissionViewer(&items, this);
 }
 
 void MainWindow::ReadOut()
@@ -189,16 +193,7 @@ void MainWindow::refreshTable()
     QList<ImageWidget *> *itemsCopy = new QList<ImageWidget *>;
     for (int i = 0; i < items.size(); i++)
     {
-        ImageWidget *temp = new ImageWidget(dataPackage, this, false);
-        // Copy all information over
-        temp->setTitle(items[i]->getTitle());
-        temp->setFilePath(items[i]->getFilePath());
-        temp->setFolderPath(items[i]->getFolderPath());
-        temp->setImagePath(items[i]->getImagePath());
-        temp->setImage(items[i]->getImage());
-        temp->setNumTargets(items[i]->getNumTargets());
-        temp->setSeen(items[i]->getSeen());
-        temp->setTargetData(items[i]->getTargetData());
+        ImageWidget *temp = new ImageWidget(*items[i]);
 
         // Preserve the old targetList window
         temp->deleteTargetListWindow();
@@ -264,7 +259,8 @@ QList<ImageWidget*>& MainWindow::getItems()
 }
 
 void MainWindow::appendItem(QString folderPath, QString filePath, QString imagePath,
-                            QString title, int numTargets, const QList<TargetData> &targetData)
+                            QString title, int numTargets, const QList<TargetData> &targetData,
+                            const LatLon &latlon)
 {
     // Creates item
     ImageWidget *newWidget = new ImageWidget(dataPackage, this, false);
@@ -274,6 +270,7 @@ void MainWindow::appendItem(QString folderPath, QString filePath, QString imageP
     newWidget->setFolderPath(folderPath);
     newWidget->setNumTargets(numTargets);
     newWidget->setTargetData(targetData);
+    newWidget->setLatLon(latlon);
     items.append(newWidget);
 }
 
@@ -297,6 +294,11 @@ void MainWindow::on_loadButton_clicked()
 
     if (dir == "") return;
 
+    // Clear items
+    ui->actionOnly_images_with_targets->setChecked(false);
+    items.clear();
+    //refreshTable();
+
     // Get mumber of files
     QStringList nameFilter;
     nameFilter.append("*.ini");
@@ -314,6 +316,7 @@ void MainWindow::on_loadButton_clicked()
     connect(loader, &MainWindowLoader::destroyed, this, [=](){
         loadingBarDialog->hide();
         refreshTable();
+        missionViewer->refresh();
         loading = false;
     });
     connect(loader, &MainWindowLoader::statusUpdate, this, [=](int value){
@@ -349,6 +352,10 @@ void MainWindowLoader::run()
         QFileInfo fileInfo(imagePath);
         QString filename(fileInfo.fileName());
 
+        LatLon latlon;
+        latlon.lat = resultFile.value("Position/latitude", 0.0).toDouble();
+        latlon.lon = resultFile.value("Position/longitude", 0.0).toDouble();
+
         if (imagePath != "")
         {
             // Read target details
@@ -361,13 +368,13 @@ void MainWindowLoader::run()
                 target.coord = resultFile.value("Crop "+QString::number(i)+"/latitude").toString()+", "+resultFile.value("Crop "+QString::number(i)+"/longitude").toString();
                 target.x = resultFile.value("Crop "+QString::number(i)+"/X").toInt();
                 target.y = resultFile.value("Crop "+QString::number(i)+"/Y").toInt();
-                target.lat = resultFile.value("Crop "+QString::number(i)+"/latitude", 0.0).toDouble();
-                target.lon = resultFile.value("Crop "+QString::number(i)+"/longitude", 0.0).toDouble();
+                target.latlon.lat = resultFile.value("Crop "+QString::number(i)+"/latitude", 0.0).toDouble();
+                target.latlon.lon = resultFile.value("Crop "+QString::number(i)+"/longitude", 0.0).toDouble();
                 target.desc = resultFile.value("Crop "+QString::number(i)+"/Description").toString();
                 targetData.append(target);
             }
 
-            mainWindow->appendItem(dir, filePath, imagePath, filename, numTargets, targetData);
+            mainWindow->appendItem(dir, filePath, imagePath, filename, numTargets, targetData, latlon);
             ++count;
             if (count%5 == 0)
             {
@@ -527,16 +534,7 @@ void MainWindow::on_actionOnly_images_with_targets_triggered()
         {
             if (items[i]->getNumTargets() == 0)
             {
-                ImageWidget *cpy = new ImageWidget(dataPackage, this, false);
-                // Copy all information over
-                cpy->setTitle(items[i]->getTitle());
-                cpy->setFilePath(items[i]->getFilePath());
-                cpy->setFolderPath(items[i]->getFolderPath());
-                cpy->setImagePath(items[i]->getImagePath());
-                cpy->setImage(items[i]->getImage());
-                cpy->setNumTargets(items[i]->getNumTargets());
-                cpy->setSeen(items[i]->getSeen());
-                cpy->setTargetData(items[i]->getTargetData());
+                ImageWidget *cpy = new ImageWidget(*items[i]);
 
                 itemsNotDisplayed.prepend(cpy);
                 items.removeAt(i);
@@ -551,4 +549,9 @@ void MainWindow::on_actionOnly_images_with_targets_triggered()
 
     // Will destroy everything removed from the table
     refreshTable();
+}
+
+void MainWindow::on_actionMission_triggered()
+{
+    missionViewer->show();
 }

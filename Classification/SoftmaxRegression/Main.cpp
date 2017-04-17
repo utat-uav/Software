@@ -192,7 +192,7 @@ void runAioIdentifier(const string &fileName, const string &gpsLog, const string
 	const string &programPath, const string &cnnPath, bool removeFalsePositives)
 {
 	string results;
-	Identifier identifier(fileName, gpsLog, outputFolder, &results, 188.0, programPath, cnnPath, removeFalsePositives);
+	Identifier identifier(fileName, gpsLog, outputFolder, &results, 175.0, programPath, cnnPath, removeFalsePositives);
 	identifier.analyze();
 }
 
