@@ -27,7 +27,7 @@
     <number>0</number>
    </property>
    <item row="0" column="0">
-    <widget class="MissionView" name="graphicsView">
+    <widget class="CustomView" name="graphicsView">
      <property name="frameShape">
       <enum>QFrame::NoFrame</enum>
      </property>
@@ -51,9 +51,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>MissionView</class>
+   <class>CustomView</class>
    <extends>QGraphicsView</extends>
-   <header>missionview.h</header>
+   <header>customview.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

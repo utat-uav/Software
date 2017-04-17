@@ -10,7 +10,7 @@
 #include <QtNetwork/QNetworkReply>
 
 #include "imagewidget.h"
-#include "missionview.h"
+#include "customview.h"
 
 #define SCALE_FACTOR 50000.0
 
@@ -29,7 +29,7 @@ MissionViewer::MissionViewer(QList<ImageWidget *> *items, QWidget *parent) :
 //    this->layout()->setMenuBar(menubar);
 //    menubar->addAction(ui->actionrefresh);
 
-    connect(ui->graphicsView, &MissionView::mouseMoved, this, &MissionViewer::mouseMoved);
+    connect(ui->graphicsView, &CustomView::mouseMoved, this, &MissionViewer::mouseMoved);
 
     networkManager = new QNetworkAccessManager(this);
     connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkManagerFinished(QNetworkReply*)));
@@ -49,7 +49,10 @@ void MissionViewer::closeEvent(QCloseEvent *event)
 void MissionViewer::show()
 {
     QDialog::show();
-    ui->graphicsView->fitInView(ui->graphicsView->scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
+    if (viewRect.width() * viewRect.height() > 0)
+    {
+        ui->graphicsView->fitInView(viewRect, Qt::KeepAspectRatio);
+    }
 }
 
 void MissionViewer::refresh()
@@ -72,27 +75,8 @@ LatLon MissionViewer::scenePointToLatLon(QPointF scenePoint)
     return LatLon::xyToLatLon(scenePoint, avgLat);
 }
 
-void MissionViewer::on_actionrefresh_triggered()
+void MissionViewer::getAvgLatLon()
 {
-    qDebug() << "Refreshing mission viewer";
-    QPen imagePen;
-    imagePen.setColor(Qt::red);
-    QPen pathPen;
-    pathPen.setColor(Qt::darkGray);
-    pathPen.setWidth(0);
-    QPen targetPen;
-    targetPen.setColor(Qt::blue);
-    double dotWidth = 0.5;
-    double imgScale = 0.05;
-    int imageWidth = 80;
-
-    ui->graphicsView->scene()->clear();
-
-    if (items->size() == 0)
-    {
-        return;
-    }
-
     // Get avg latlon
     avgLat = 0;
     avgLon = 0;
@@ -103,6 +87,16 @@ void MissionViewer::on_actionrefresh_triggered()
     }
     avgLat /= (double)items->size();
     avgLon /= (double)items->size();
+}
+
+void MissionViewer::drawPath()
+{
+    QPen imagePen;
+    imagePen.setColor(Qt::red);
+    QPen pathPen;
+    pathPen.setColor(Qt::darkGray);
+    pathPen.setWidth(0);
+    double dotWidth = 0.5;
 
     // Draw path
     QPointF prev;
@@ -131,8 +125,19 @@ void MissionViewer::on_actionrefresh_triggered()
                     dotWidth, dotWidth, QPen(Qt::transparent), QBrush(imagePen.color()));
 
         item->setToolTip(items->at(i)->getTitle());
+    }
+}
 
-        // Draw corresponding targets
+void MissionViewer::drawTargets()
+{
+    QPen targetPen;
+    targetPen.setColor(Qt::blue);
+    double imgScale = 0.05;
+    int imageWidth = 80;
+
+    // Draw targets
+    for (int i = 0; i < items->size(); ++i)
+    {
         QList<TargetData>& targetData = items->at(i)->getTargetData();
         for (int j = 0; j < targetData.size(); ++j)
         {
@@ -156,11 +161,26 @@ void MissionViewer::on_actionrefresh_triggered()
             imageItem->setToolTip(targetData[j].desc + "\nTaken by: " + items->at(i)->getTitle());
         }
     }
+}
 
-    ui->graphicsView->fitInView(ui->graphicsView->scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
+void MissionViewer::on_actionrefresh_triggered()
+{
+    qDebug() << "Refreshing mission viewer";
 
-    qDebug() << "Avg lat lon:";
-    qDebug() << QString::number(avgLat, 'f', 10) << QString::number(avgLon, 'f', 10);
+    ui->graphicsView->scene()->clear();
+
+    if (items->size() == 0)
+    {
+        return;
+    }
+
+    getAvgLatLon();
+    drawPath();
+    drawTargets();
+
+    viewRect = ui->graphicsView->scene()->itemsBoundingRect();
+    ui->graphicsView->fitInView(viewRect, Qt::KeepAspectRatio);
+
     QString imagePath = "https://maps.googleapis.com/maps/api/staticmap?maptype=satellite&center=" + QString::number(avgLat, 'f', 10) +
             "," + QString::number(avgLon, 'f', 10) + "&zoom=16&size=1280x1280&scale=2";
     download(imagePath);

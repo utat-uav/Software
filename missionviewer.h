@@ -7,7 +7,7 @@
 
 #include "imagewidget.h"
 
-class MissionView;
+class CustomView;
 
 namespace Ui {
 class MissionViewer;
@@ -36,11 +36,16 @@ private slots:
 private:
     Ui::MissionViewer *ui;
 
+    QRectF viewRect;
     double avgLat, avgLon;
     QList<ImageWidget *> *items;
 
     QNetworkAccessManager *networkManager;
     void download(const QString &urlStr);
+
+    void drawPath();
+    void drawTargets();
+    void getAvgLatLon();
 };
 
 #endif // MISSIONVIEWER_H

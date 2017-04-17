@@ -1,4 +1,4 @@
-#include "missionview.h"
+#include "customview.h"
 
 #include <QMouseEvent>
 #include <QScrollBar>
@@ -8,7 +8,7 @@
 #define VIEW_WIDTH viewport()->rect().width()
 #define VIEW_HEIGHT viewport()->rect().height()
 
-MissionView::MissionView(QWidget *parent)
+CustomView::CustomView(QWidget *parent)
     : QGraphicsView(parent)
 {
     QGraphicsScene *scene = new QGraphicsScene(0,0,1000,1000);
@@ -30,17 +30,17 @@ MissionView::MissionView(QWidget *parent)
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 }
 
-MissionView::~MissionView()
+CustomView::~CustomView()
 {
 
 }
 
-void MissionView::setMaxSize()
+void CustomView::setMaxSize()
 {
     setSceneRect(-1e10, -1e10, 2e10, 2e10);
 }
 
-void MissionView::wheelEvent(QWheelEvent *event)
+void CustomView::wheelEvent(QWheelEvent *event)
 {
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     QPoint scrollAmount = event->angleDelta();
@@ -49,7 +49,7 @@ void MissionView::wheelEvent(QWheelEvent *event)
     scrollAmount.y() > 0 ? zoomIn() : zoomOut();
 }
 
-void MissionView::mousePressEvent(QMouseEvent *event)
+void CustomView::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == panButton)
     {
@@ -60,7 +60,7 @@ void MissionView::mousePressEvent(QMouseEvent *event)
     QGraphicsView::mousePressEvent(event);
 }
 
-void MissionView::mouseReleaseEvent(QMouseEvent *event)
+void CustomView::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == panButton)
     {
@@ -70,7 +70,7 @@ void MissionView::mouseReleaseEvent(QMouseEvent *event)
     QGraphicsView::mouseReleaseEvent(event);
 }
 
-void MissionView::mouseMoveEvent(QMouseEvent *event)
+void CustomView::mouseMoveEvent(QMouseEvent *event)
 {
     if (_doMousePanning)
     {
@@ -85,24 +85,24 @@ void MissionView::mouseMoveEvent(QMouseEvent *event)
     _lastMousePos = event->pos();
 }
 
-void MissionView::zoomIn()
+void CustomView::zoomIn()
 {
     zoom(1 + zoomDelta);
 }
 
-void MissionView::zoomOut()
+void CustomView::zoomOut()
 {
     zoom(1 - zoomDelta);
 }
 
-void MissionView::zoom(float scaleFactor)
+void CustomView::zoom(float scaleFactor)
 {
     scale(scaleFactor, scaleFactor);
     _scale *= scaleFactor;
 }
 
 
-void MissionView::pan(QPointF delta)
+void CustomView::pan(QPointF delta)
 {
     // Scale the pan amount by the current zoom.
     delta *= _scale;

@@ -5,12 +5,12 @@
 #include <QPointF>
 #include <QObject>
 
-class MissionView : public QGraphicsView
+class CustomView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    MissionView(QWidget *parent);
-    ~MissionView();
+    CustomView(QWidget *parent);
+    ~CustomView();
 
 signals:
     void mouseMoved(QPointF scenePoint);

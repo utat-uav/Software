@@ -26,7 +26,7 @@ SOURCES += main.cpp\
     imagesetprocessor.cpp \
     loadingbardialog.cpp \
     missionviewer.cpp \
-    missionview.cpp
+    customview.cpp
 
 HEADERS  += mainwindow.h \
     imagewidget.h \
@@ -40,7 +40,7 @@ HEADERS  += mainwindow.h \
     imagesetprocessor.h \
     loadingbardialog.h \
     missionviewer.h \
-    missionview.h
+    customview.h
 
 FORMS    += mainwindow.ui \
     imagewidget.ui \
