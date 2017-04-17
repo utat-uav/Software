@@ -24,6 +24,7 @@ struct LatLon
     double lat = 0;
     double lon = 0;
     QPointF convertToXY(double avgLat);
+    static LatLon xyToLatLon(QPointF xy, double avgLat);
 };
 
 struct TargetData

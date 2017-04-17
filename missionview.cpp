@@ -78,6 +78,9 @@ void MissionView::mouseMoveEvent(QMouseEvent *event)
         //pan(mouseDelta);
     }
 
+    QPointF point = mapToScene(event->pos());
+    emit mouseMoved(point);
+
     QGraphicsView::mouseMoveEvent(event);
     _lastMousePos = event->pos();
 }

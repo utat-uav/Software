@@ -5,15 +5,22 @@
 #include <QDebug>
 #include <QToolBar>
 #include <QGraphicsEllipseItem>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkRequest>
+#include <QtNetwork/QNetworkReply>
 
 #include "imagewidget.h"
 #include "missionview.h"
 
 #define SCALE_FACTOR 50000.0
 
+//https://maps.googleapis.com/maps/api/staticmap?maptype=satellite&center=43.83461,-79.2413&zoom=17&size=1280x1280&scale=2
+
 MissionViewer::MissionViewer(QList<ImageWidget *> *items, QWidget *parent) :
     QDialog(parent),
     items(items),
+    avgLat(0),
+    avgLon(0),
     ui(new Ui::MissionViewer)
 {
     ui->setupUi(this);
@@ -21,6 +28,11 @@ MissionViewer::MissionViewer(QList<ImageWidget *> *items, QWidget *parent) :
 //    QToolBar *menubar = new QToolBar();
 //    this->layout()->setMenuBar(menubar);
 //    menubar->addAction(ui->actionrefresh);
+
+    connect(ui->graphicsView, &MissionView::mouseMoved, this, &MissionViewer::mouseMoved);
+
+    networkManager = new QNetworkAccessManager(this);
+    connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkManagerFinished(QNetworkReply*)));
 }
 
 MissionViewer::~MissionViewer()
@@ -45,6 +57,21 @@ void MissionViewer::refresh()
     on_actionrefresh_triggered();
 }
 
+void MissionViewer::mouseMoved(QPointF scenePoint)
+{
+    LatLon latlon = scenePointToLatLon(scenePoint);
+
+    this->setWindowTitle(QString("Mission Viewer - (%1, %2)").arg(latlon.lat).arg(latlon.lon));
+}
+
+LatLon MissionViewer::scenePointToLatLon(QPointF scenePoint)
+{
+    scenePoint = scenePoint / SCALE_FACTOR;
+    scenePoint.setY(-scenePoint.y());
+
+    return LatLon::xyToLatLon(scenePoint, avgLat);
+}
+
 void MissionViewer::on_actionrefresh_triggered()
 {
     qDebug() << "Refreshing mission viewer";
@@ -66,12 +93,16 @@ void MissionViewer::on_actionrefresh_triggered()
         return;
     }
 
-    double avgLat = 0;
+    // Get avg latlon
+    avgLat = 0;
+    avgLon = 0;
     for (int i = 0; i < items->size(); ++i)
     {
         avgLat += items->at(i)->getLatLon().lat;
+        avgLon += items->at(i)->getLatLon().lon;
     }
     avgLat /= (double)items->size();
+    avgLon /= (double)items->size();
 
     // Draw path
     QPointF prev;
@@ -115,9 +146,10 @@ void MissionViewer::on_actionrefresh_triggered()
             QImage image(totalPath);
             if (image.isNull()) continue;
             QPixmap pixmap = QPixmap::fromImage(image);
-            pixmap = pixmap.scaled(imageWidth, imageWidth, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation) ;
+            pixmap = pixmap.scaled(imageWidth, imageWidth, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation);
             QGraphicsPixmapItem* imageItem = new QGraphicsPixmapItem(pixmap);
-            imageItem->setPos(targetPoint.x() - imgScale * 50 / 2, -targetPoint.y() - imgScale * 50 / 2);
+            imageItem->setPos(targetPoint.x() - imgScale * imageWidth / 2,
+                              -targetPoint.y() - imgScale * imageWidth / 2);
             imageItem->setScale(imgScale);
             ui->graphicsView->scene()->addItem(imageItem);
 
@@ -130,4 +162,51 @@ void MissionViewer::on_actionrefresh_triggered()
     }
 
     //ui->graphicsView->fitInView(ui->graphicsView->scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
+
+    qDebug() << "Avg lat lon:";
+    qDebug() << QString::number(avgLat, 'f', 10) << QString::number(avgLon, 'f', 10);
+    QString imagePath = "https://maps.googleapis.com/maps/api/staticmap?maptype=satellite&center=" + QString::number(avgLat, 'f', 10) +
+            "," + QString::number(avgLon, 'f', 10) + "&zoom=16&size=1280x1280&scale=2";
+    download(imagePath);
+}
+
+void MissionViewer::download(const QString &urlStr)
+{
+    QUrl url(urlStr);
+    QNetworkRequest request(url);
+    networkManager->get(request);
+}
+
+void MissionViewer::networkManagerFinished(QNetworkReply *reply)
+{
+    if (reply->error() != QNetworkReply::NoError)
+    {
+        qDebug() << "Error in" << reply->url() << ":" << reply->errorString();
+        return;
+    }
+    QVariant attribute = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    if (attribute.isValid())
+    {
+        QUrl url = attribute.toUrl();
+        qDebug() << "must go to:" << url;
+        return;
+    }
+    qDebug() << "ContentType:" << reply->header(QNetworkRequest::ContentTypeHeader).toString();
+    QByteArray jpegData = reply->readAll();
+    QPixmap pixmap;
+    pixmap.loadFromData(jpegData);
+
+    LatLon avgLL;
+    avgLL.lat = avgLat;
+    avgLL.lon = avgLon;
+    QPointF xy = avgLL.convertToXY(avgLat) * SCALE_FACTOR;
+    int width = 1280;
+    double imgScale = 0.41;
+
+    pixmap = pixmap.scaled(width, width, Qt::KeepAspectRatioByExpanding, Qt::FastTransformation);
+    QGraphicsPixmapItem* imageItem = new QGraphicsPixmapItem(pixmap);
+    imageItem->setPos(xy.x() - imgScale * width / 2, -xy.y() - imgScale * width / 2);
+    imageItem->setScale(imgScale);
+    imageItem->setZValue(-1);
+    ui->graphicsView->scene()->addItem(imageItem);
 }

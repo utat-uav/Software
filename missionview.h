@@ -2,12 +2,18 @@
 #define CUSTOMVIEW_H
 
 #include <QGraphicsView>
+#include <QPointF>
+#include <QObject>
 
 class MissionView : public QGraphicsView
 {
+    Q_OBJECT
 public:
     MissionView(QWidget *parent);
     ~MissionView();
+
+signals:
+    void mouseMoved(QPointF scenePoint);
 
 private:
     virtual void mouseMoveEvent(QMouseEvent *event);

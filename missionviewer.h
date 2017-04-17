@@ -3,8 +3,10 @@
 
 #include <QDialog>
 #include <QGraphicsScene>
+#include <QtNetwork/QNetworkAccessManager>
 
-class ImageWidget;
+#include "imagewidget.h"
+
 class MissionView;
 
 namespace Ui {
@@ -24,13 +26,21 @@ public:
     void show();
     void refresh();
 
+    LatLon scenePointToLatLon(QPointF scenePoint);
+
 private slots:
     void on_actionrefresh_triggered();
+    void mouseMoved(QPointF scenePoint);
+    void networkManagerFinished(QNetworkReply *reply);
 
 private:
     Ui::MissionViewer *ui;
 
+    double avgLat, avgLon;
     QList<ImageWidget *> *items;
+
+    QNetworkAccessManager *networkManager;
+    void download(const QString &urlStr);
 };
 
 #endif // MISSIONVIEWER_H
