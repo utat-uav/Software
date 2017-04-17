@@ -153,15 +153,11 @@ void MissionViewer::on_actionrefresh_triggered()
             imageItem->setScale(imgScale);
             ui->graphicsView->scene()->addItem(imageItem);
 
-//            QGraphicsEllipseItem *dotItem = ui->graphicsView->scene()->addEllipse(
-//                        targetPoint.x() - dotWidth/2, -targetPoint.y() - dotWidth/2,
-//                        dotWidth, dotWidth, targetPen, QBrush());
-
             imageItem->setToolTip(targetData[j].desc + "\nTaken by: " + items->at(i)->getTitle());
         }
     }
 
-    //ui->graphicsView->fitInView(ui->graphicsView->scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
+    ui->graphicsView->fitInView(ui->graphicsView->scene()->itemsBoundingRect(), Qt::KeepAspectRatio);
 
     qDebug() << "Avg lat lon:";
     qDebug() << QString::number(avgLat, 'f', 10) << QString::number(avgLon, 'f', 10);

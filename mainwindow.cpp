@@ -297,7 +297,11 @@ void MainWindow::on_loadButton_clicked()
     // Clear items
     ui->actionOnly_images_with_targets->setChecked(false);
     items.clear();
-    //refreshTable();
+    for (int i = 0; i < itemsNotDisplayed.size(); ++i)
+    {
+        delete itemsNotDisplayed[i];
+    }
+    itemsNotDisplayed.clear();
 
     // Get mumber of files
     QStringList nameFilter;
