@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Geolocation.h"
+#include "Classifier.h"
 
 class Identifier
 {
@@ -45,6 +46,7 @@ public:
 		int size;
 		LatLon coords = LatLon(0,0);
 		string description;
+		Classifier::Results classifierResults;
 	};
 
 	void analyze();

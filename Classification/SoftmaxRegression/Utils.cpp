@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "Utils.h"
-
 #include "Classifier.h"
 #include "BarcodeReader.h"
 
@@ -84,7 +83,7 @@ void Utils::cropImage(Mat& image)
 	}
 }
 
-bool Utils::allInOneClassify(const Mat& image, Classifier *classifier, string &description)
+bool Utils::allInOneClassify(const Mat& image, Classifier *classifier, Classifier::Results& results)
 {
 	assert(classifier != NULL);
 	assert(!image.empty());
@@ -96,21 +95,25 @@ bool Utils::allInOneClassify(const Mat& image, Classifier *classifier, string &d
 	string barcodeResult = barcodeReader.scanImage(grayscale);
 	if (barcodeResult != "")
 	{
-		description = barcodeResult;
+		results.description = barcodeResult;
 		return true;
 	}
 
-	Classifier::Results results;
 	classifier->classify(image, results);
 
-	cout << results.characterConfidence << endl;
+	//cout << results.characterConfidence << endl;
 	if (results.characterConfidence != 0)
 	{
-		description = results.description;
 		return true;
 	}
 
 	// Did not classify as anything
-	description = "Unclassified";
+	results.description = "Unclassified";
 	return false;
+}
+
+
+Vec2f Utils::polarToCartesian(Vec2f polarCoords)
+{
+	return Vec2f(polarCoords[0] * cos(polarCoords[1]), polarCoords[0] * sin(polarCoords[1]));
 }

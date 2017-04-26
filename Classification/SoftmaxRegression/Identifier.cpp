@@ -2,7 +2,6 @@
 #include "Identifier.h"
 
 #include "Utils.h"
-#include "Classifier.h"
 
 /*
  * All in one mode means it will perform all of classification and barcode reading
@@ -175,12 +174,10 @@ void Identifier::analyze()
 		// Check if valid by doing all the classification tests
 		if (allInOne)
 		{
-			string description;
-			if (!Utils::allInOneClassify(crop, classifier, description) && removeFalsePositives)
+			if (!Utils::allInOneClassify(crop, classifier, cropResult.classifierResults) && removeFalsePositives)
 			{
 				continue;
 			}
-			cropResult.description = description;
 		}
 
 		// Write image
@@ -387,11 +384,12 @@ void Identifier::writeCropResults(const std::vector<CropResult> &cropResults)
 		results->append("Y=" + std::to_string(cropResults[i].y) + "\n");
 		results->append("Size=" + std::to_string(cropResults[i].size) + "\n");
 
-		results->append("Description=" + cropResults[i].description + "\n");
-
 		LatLon coords = cropResults[i].coords;
 		results->append("latitude=" + std::to_string(coords.lat) + "\n");
 		results->append("longitude=" + std::to_string(coords.lon) + "\n");
+		results->append("Background Color=" + cropResults[i].classifierResults.shapeColor + "\n");
+		results->append("Alphanumeric Color=" + cropResults[i].classifierResults.characterColor + "\n");
+		results->append("Description=" + cropResults[i].classifierResults.description + "\n");
 	}
 }
 
