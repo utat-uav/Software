@@ -6,11 +6,14 @@
 
 #include "Segmenter.h"
 #include "Utils.h"
+#include "Color.h"
+
 
 Classifier::Classifier(const string &folderPath, const string &programPath)
 	: folderPath(folderPath), programPath(programPath)
 {
 	session = NULL;
+	knownColors = Color::getAUVSIColors();
 
 	if (folderPath[folderPath.size() - 1] != '/' && folderPath[folderPath.size() - 1] != '\\')
 	{
@@ -85,9 +88,7 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 		try
 		{
 			// classify D:\Workspace\UAV\Test Flights\Flight3_output\im0027roi0.jpg
-			cv::Mat image(segmentedImages[i].rows, segmentedImages[i].cols, CV_8UC1);
-			segmentedImages[i].convertTo(image, CV_8UC1);
-			classifyCharacter(image, c, confidence);
+			classifyCharacter(segmentedImages[i], c, confidence);
 		}
 		catch (cv::Exception &e)
 		{
@@ -95,7 +96,7 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 		}
 
 		// Anything below 98% is uncertainty that we don't need
-		if (confidence < 0.98)
+		if (confidence < params.confidenceThresh)
 		{
 			cout << "Invalid image. Confidence of " << confidence << " for a " << c << " is too low. Likely a false positive ..." << endl;
 		}
@@ -111,17 +112,138 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 		}
 	}
 
+	if (!falsePositiveNoted)
+	{
+		classifyColors(imageMat, segmentedImages, results.shapeColor, results.characterColor);
+		cout << "Classified alphanumeric color as " << results.characterColor << endl;
+		cout << "Classified shape color as " << results.shapeColor << endl;
+	}
+
 	return -1;
 }
 
+
+void Classifier::classifyColors(const Mat &image, vector<Mat> segmentedImages, string& shapeColorStr, string& letterColorStr)
+{
+	Mat mask = image.clone();
+
+	// resize segmentedImages
+	resize(segmentedImages[0], segmentedImages[0], Size(image.cols, image.rows), 1);
+	resize(segmentedImages[1], segmentedImages[1], Size(image.cols, image.rows), 1);
+
+	// take the average color of shape and letter
+	// avgColor is in RGB 
+	Vec3f avgColorShape(0.0, 0.0, 0.0), avgColorLetter(0.0, 0.0, 0.0);
+	int shapePixels = 0, letterPixels = 0;
+	for (int i = 0; i < image.rows; ++i)
+		for (int j = 0; j < image.cols; ++j)
+		{
+			Vec3b bgrColor = image.at<Vec3b>(i, j);
+			if (segmentedImages[1].at<unsigned char>(i, j) >= 255)
+			{
+				avgColorLetter[0] += bgrColor[2];
+				avgColorLetter[1] += bgrColor[1];
+				avgColorLetter[2] += bgrColor[0];
+				++letterPixels;
+			}
+			else
+			{
+				mask.at<Vec3b>(i, j) = Vec3b(0, 0, 0);
+				if (segmentedImages[0].at<unsigned char>(i, j) >= 255)
+				{
+					avgColorShape[0] += bgrColor[2];
+					avgColorShape[1] += bgrColor[1];
+					avgColorShape[2] += bgrColor[0];
+					++shapePixels;
+				}
+			}	
+		}
+
+	avgColorShape /= (shapePixels * 255.0);
+	avgColorLetter /= (letterPixels * 255.0);
+	Color shapeColor(avgColorShape), letterColor(avgColorLetter);
+	Color closest;
+
+	// for testing
+	/*
+	imshow("mask", mask);
+	waitKey(0);
+	cout << "saturation: " << shapeColor.hls[2] << " vs " << letterColor.hls[2] << endl;
+	cout << "lightness: " << shapeColor.hls[1] << " vs " << letterColor.hls[1] << endl;
+	cout << "color var: " << shapeColor.colorVariance() << " vs " << letterColor.colorVariance() << endl; 
+	shapeColor.visualize(false);
+	knownColors["brown"].visualize(false);
+	knownColors["orange"].visualize(false);
+	waitKey(0);
+	*/
+
+	classifyColorsHelper(shapeColor, closest);
+	shapeColorStr = closest.name;
+
+	classifyColorsHelper(letterColor, closest);
+	letterColorStr = closest.name;
+}
+
+
+void Classifier::classifyColorsHelper(const Color& color, Color& _closest)
+{
+	Color closest;
+	double minDist = numeric_limits<double>::max();
+
+	// if it seems to be a grayscale color then we only compare lightness values
+	if (color.colorVariance() < params.varThresh || color.hls[1] > params.lThresh || color.hls[1] < 1.0 - params.lThresh)
+	{
+		vector<Color> grayScale = { knownColors["black"], knownColors["gray"], knownColors["white"] };
+		for (int i = 0; i < grayScale.size(); ++i)
+		{
+			double dist = pow(color.hls[1] - grayScale[i].hls[1], 2.0);
+			if (dist < minDist)
+			{
+				minDist = dist;
+				closest = grayScale[i];
+			}
+		}
+		_closest = closest;
+		return;
+	}
+
+	for (auto it = knownColors.begin(); it != knownColors.end(); ++it)
+	{
+		// don't compare with grayscale colors
+		string name = it->first;
+		if (name == "black" || name == "gray" || name == "white")
+			continue;
+
+		double dist = color.distanceFrom(it->second);
+		if (dist < minDist)
+		{
+			minDist = dist;
+			closest = it->second;
+		}
+	}
+
+	// brown and orange are distinguished best by saturation values
+	if (closest.name == "brown" || closest.name == "orange")
+	{
+		double satDistOrange = pow(color.hls[2] - knownColors["orange"].hls[2], 2.0);
+		double satDistBrown = pow(color.hls[2] - knownColors["brown"].hls[2], 2.0);
+		if (satDistOrange < satDistBrown)
+			closest = knownColors["orange"];
+		else
+			closest = knownColors["brown"];
+	}
+
+	_closest = closest;
+}
+
+
 void Classifier::classifyCharacter(const Mat &image, char &c, double &confidence)
 {
-	int numRots = 18;
 	confidence = 0;
 	vector<Mat> images;
-	for (int rotIdx = 0; rotIdx < numRots; ++rotIdx)
+	for (int rotIdx = 0; rotIdx < params.numRots; ++rotIdx)
 	{
-		double angle = (rotIdx - (int)(numRots / 2)) * 20;
+		double angle = (rotIdx - (int)(params.numRots / 2)) * 20;
 		Mat rotated = Utils::rotateImage(image, angle);
 		processImage(rotated);
 		images.push_back(rotated);

@@ -107,8 +107,28 @@ std::vector<cv::Mat> Segmenter::segment(cv::Mat test_im)
 	}
 
 	cv::Mat mylabels_res = mylabels.reshape(0, test_im.rows);
+	vector<cv::Mat> retVals = { results.first, results.second};
+	
 
-	return {255 * results.first, 255 * results.second};
+	// resize, threshold, and fix some color-depth issue
+	for (int i = 0; i < retVals.size(); ++i)
+	{
+		for (int row = 0; row < retVals[i].rows; ++row)
+			for (int col = 0; col < retVals[i].cols; ++col)
+			{
+				if (retVals[i].at<int>(row, col) > 0)
+				{
+					retVals[i].at<int>(row, col) = 255;
+				}
+				else
+				{
+					retVals[i].at<int>(row, col) = 0;
+				}
+			}
+		retVals[i].convertTo(retVals[i], CV_8UC1);
+	}
+
+	return retVals;
 }
 
 

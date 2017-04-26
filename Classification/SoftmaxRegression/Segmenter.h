@@ -1,7 +1,7 @@
 #pragma once
 #include "stdafx.h"
+#include "Utils.h"
 #include <queue>
-#define PI 3.141592653589793238462643383279502884L /* pi */
 
 class Segmenter
 {
@@ -9,6 +9,7 @@ public:
 	Segmenter(std::string outputFolder = "dont_write_output");
 	~Segmenter();
 
+	// shape is first element, letter is second element
 	std::vector<cv::Mat> segment(cv::Mat image);
 	std::vector<cv::Mat> segment(string path);
 
