@@ -375,6 +375,8 @@ void MainWindowLoader::run()
                 target.latlon.lat = resultFile.value("Crop "+QString::number(i)+"/latitude", 0.0).toDouble();
                 target.latlon.lon = resultFile.value("Crop "+QString::number(i)+"/longitude", 0.0).toDouble();
                 target.desc = resultFile.value("Crop "+QString::number(i)+"/Description").toString();
+                target.desc += "\nAlphanumeric Color: " + resultFile.value("Crop "+QString::number(i)+"/Alphanumeric Color").toString();
+                target.desc += "\nBackground Color: " + resultFile.value("Crop "+QString::number(i)+"/Background Color").toString();
                 targetData.append(target);
             }
 

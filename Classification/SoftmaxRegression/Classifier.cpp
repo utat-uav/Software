@@ -168,8 +168,8 @@ void Classifier::classifyColors(const Mat &image, vector<Mat> segmentedImages, s
 	/*
 	imshow("mask", mask);
 	waitKey(0);
-	cout << "saturation: " << shapeColor.hls[2] << " vs " << letterColor.hls[2] << endl;
-	cout << "lightness: " << shapeColor.hls[1] << " vs " << letterColor.hls[1] << endl;
+	cout << "saturation: " << shapeColor.hls()[2] << " vs " << letterColor.hls()[2] << endl;
+	cout << "lightness: " << shapeColor.hls()[1] << " vs " << letterColor.hls()[1] << endl;
 	cout << "color var: " << shapeColor.colorVariance() << " vs " << letterColor.colorVariance() << endl; 
 	shapeColor.visualize(false);
 	knownColors["brown"].visualize(false);
@@ -191,12 +191,12 @@ void Classifier::classifyColorsHelper(const Color& color, Color& _closest)
 	double minDist = numeric_limits<double>::max();
 
 	// if it seems to be a grayscale color then we only compare lightness values
-	if (color.colorVariance() < params.varThresh || color.hls[1] > params.lThresh || color.hls[1] < 1.0 - params.lThresh)
+	if (color.colorVariance() < params.varThresh || color.hls()[1] > params.lThresh || color.hls()[1] < 1.0 - params.lThresh)
 	{
 		vector<Color> grayScale = { knownColors["black"], knownColors["gray"], knownColors["white"] };
 		for (int i = 0; i < grayScale.size(); ++i)
 		{
-			double dist = pow(color.hls[1] - grayScale[i].hls[1], 2.0);
+			double dist = pow(color.hls()[1] - grayScale[i].hls()[1], 2.0);
 			if (dist < minDist)
 			{
 				minDist = dist;
@@ -225,8 +225,8 @@ void Classifier::classifyColorsHelper(const Color& color, Color& _closest)
 	// brown and orange are distinguished best by saturation values
 	if (closest.name == "brown" || closest.name == "orange")
 	{
-		double satDistOrange = pow(color.hls[2] - knownColors["orange"].hls[2], 2.0);
-		double satDistBrown = pow(color.hls[2] - knownColors["brown"].hls[2], 2.0);
+		double satDistOrange = pow(color.hls()[2] - knownColors["orange"].hls()[2], 2.0);
+		double satDistBrown = pow(color.hls()[2] - knownColors["brown"].hls()[2], 2.0);
 		if (satDistOrange < satDistBrown)
 			closest = knownColors["orange"];
 		else

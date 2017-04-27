@@ -2,19 +2,19 @@
 #include "Color.h"
 
 
-Color::Color(Vec3f _rgb, string name) : rgb(_rgb), name(name)
+Color::Color(Vec3f _rgb, string name) : rgb_(_rgb), name(name)
 {
 	Mat3f matRgb(_rgb), matHls;
 	cvtColor(matRgb, matHls, CV_RGB2HLS);
-	hls = matHls.at<Vec3f>(0);
+	hls_ = matHls.at<Vec3f>(0);
 }
 
 
 double Color::distanceFrom (const Color& other) const
 {
 	// x = hue, y = lightness, z = saturation
-	Vec2f selfxy = Utils::polarToCartesian(Vec2f(1.0, hls[0] * DEG_TO_RAD));
-	Vec2f otherxy = Utils::polarToCartesian(Vec2f(1.0, other.hls[0] * DEG_TO_RAD));
+	Vec2f selfxy = Utils::polarToCartesian(Vec2f(1.0, hls_[0] * DEG_TO_RAD));
+	Vec2f otherxy = Utils::polarToCartesian(Vec2f(1.0, other.hls_[0] * DEG_TO_RAD));
 	Vec2f xyDiff = selfxy - otherxy;
 	return xyDiff.dot(xyDiff);
 }
@@ -24,16 +24,16 @@ double Color::colorVariance() const
 {
 	// use rgb values
 	double var = 0;
-	var += pow(rgb[0] - rgb[1], 2.0);
-	var += pow(rgb[0] - rgb[2], 2.0);
-	var += pow(rgb[1] - rgb[2], 2.0);
+	var += pow(rgb_[0] - rgb_[1], 2.0);
+	var += pow(rgb_[0] - rgb_[2], 2.0);
+	var += pow(rgb_[1] - rgb_[2], 2.0);
 	return var;
 }
 
 
 void Color::visualize(bool wait) const
 {
-	Mat patch(100, 100, CV_8UC3, Scalar(255 * rgb[2], 255 * rgb[1], 255 * rgb[0])); //cv::Mat image(retVals[i].rows, retVals[i].cols, CV_8UC1);
+	Mat patch(100, 100, CV_8UC3, Scalar(255 * rgb_[2], 255 * rgb_[1], 255 * rgb_[0])); 
 	imshow(name, patch);
 
 	if (wait)
