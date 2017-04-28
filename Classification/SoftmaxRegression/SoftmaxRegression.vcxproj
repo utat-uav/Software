@@ -247,6 +247,7 @@
     <ClInclude Include="BarcodeReader.h" />
     <ClInclude Include="Classifier.h" />
     <ClInclude Include="CMDHandler.h" />
+    <ClInclude Include="Color.h" />
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="Geolocation.h" />
     <ClInclude Include="Identifier.h" />
@@ -259,6 +260,7 @@
     <ClCompile Include="BarcodeReader.cpp" />
     <ClCompile Include="Classifier.cpp" />
     <ClCompile Include="CMDHandler.cpp" />
+    <ClCompile Include="Color.cpp" />
     <ClCompile Include="FileManager.cpp" />
     <ClCompile Include="Geolocation.cpp" />
     <ClCompile Include="Identifier.cpp" />
