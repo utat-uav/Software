@@ -47,7 +47,7 @@ private:
     float initialScale = 3.35;  // ref val from transform().m11()
     float targetZoomFactor = 6.0;
 
-    int iconLength, tableWidth, rowHeight; // based on user desktop size
+    int iconLength;
     Ui::MissionViewer *ui;
 
     QRectF viewRect;

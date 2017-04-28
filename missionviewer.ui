@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>477</width>
-    <height>272</height>
+    <width>1132</width>
+    <height>571</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Mission Viewer</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+  <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0,1">
    <property name="spacing">
     <number>0</number>
    </property>
@@ -49,6 +49,19 @@
     </widget>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(195, 195, 195);</string>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QTableWidget" name="tableWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
@@ -58,7 +71,7 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>200</width>
+       <width>420</width>
        <height>272</height>
       </size>
      </property>
@@ -66,13 +79,7 @@
       <bool>false</bool>
      </property>
      <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <property name="lineWidth">
-      <number>0</number>
+      <enum>QFrame::NoFrame</enum>
      </property>
      <property name="horizontalScrollBarPolicy">
       <enum>Qt::ScrollBarAsNeeded</enum>

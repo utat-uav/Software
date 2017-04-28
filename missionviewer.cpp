@@ -38,17 +38,7 @@ MissionViewer::MissionViewer(QList<ImageWidget *> *items, QWidget *parent) :
 //    this->layout()->setMenuBar(menubar);
 //    menubar->addAction(ui->actionrefresh);
 
-    // desktop-dependent sizing
-    QRect rec = QApplication::desktop()->screenGeometry();
-    tableWidth = rec.width() * 0.35;
-    rowHeight = rec.height() * 0.25;
-
-    // not too small or too large
-    tableWidth = std::max(tableWidth, 300);
-    tableWidth = std::min(tableWidth, 1000);
-    rowHeight = std::max(rowHeight, 200);
-    rowHeight = std::min(rowHeight, 400);
-    iconLength = rowHeight;
+    iconLength = 180;
 
     connect(this, SIGNAL(requestUpdate()), this, SLOT(update()), Qt::ConnectionType::QueuedConnection);
     connect(ui->graphicsView, &CustomView::mouseMoved, this, &MissionViewer::mouseMoved);
@@ -77,7 +67,7 @@ void MissionViewer::show()
         QPalette palette = ui->graphicsView->palette();
         palette.setColor(ui->graphicsView->backgroundRole(), QColor(230, 230, 230));
         ui->graphicsView->setPalette(palette);
-        ui->graphicsView->setMinimumSize(QSize(1.5 * tableWidth, 1.5 * tableWidth));
+        //ui->graphicsView->setMinimumSize(QSize(1.5 * tableWidth, 1.5 * tableWidth));
     }
 }
 
@@ -276,6 +266,7 @@ void MissionViewer::fillTargetTable()
         classificationTable->setItem(4, 0, shapeColorDesc);
         classificationTable->setItem(5, 0, orientationDesc);
         classificationTable->horizontalHeader()->setStretchLastSection(true);
+        classificationTable->setFrameStyle(QFrame::NoFrame);
 
         // get total path of roi, set icon
         QPushButton *roi = new QPushButton;
@@ -332,11 +323,11 @@ void MissionViewer::on_actionrefresh_triggered()
 
     // fill table with targets and resize tableWidget properly
     fillTargetTable();
-    ui->tableWidget->setFixedWidth(tableWidth);
-    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    QHeaderView *verticalHeader = ui->tableWidget->verticalHeader();
-    verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
-    verticalHeader->setDefaultSectionSize(rowHeight);
+    //ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    //QHeaderView *verticalHeader = ui->tableWidget->verticalHeader();
+    //verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
+    ui->tableWidget->resizeColumnsToContents();
+    ui->tableWidget->resizeRowsToContents();
     ui->tableWidget->setIconSize(QSize(iconLength, iconLength));
 }
 
