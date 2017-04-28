@@ -267,6 +267,12 @@ void MissionViewer::fillTargetTable()
         classificationTable->setItem(5, 0, orientationDesc);
         classificationTable->horizontalHeader()->setStretchLastSection(true);
         classificationTable->setFrameStyle(QFrame::NoFrame);
+        classificationTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        classificationTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        for (int j = 0; j < classificationTable->rowCount(); ++j)
+        {
+            classificationTable->setRowHeight(j, 30);
+        }
 
         // get total path of roi, set icon
         QPushButton *roi = new QPushButton;
