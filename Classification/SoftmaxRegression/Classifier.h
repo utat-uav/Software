@@ -12,6 +12,7 @@ public:
 	{
 		char character;
 		double characterConfidence;
+		string shape;
 		string description;
 		string shapeColor;
 		string characterColor;
@@ -23,14 +24,16 @@ public:
 	{
 		Params()
 		{
-			lThresh = 0.9;
+			lLowThresh = 0.1;
+			lHighThresh = 0.80;
 			varThresh = 0.001;
 			confidenceThresh = 0.98;
 			numRots = 18;
 		}
 
 		// for deciding if color should be grayscale
-		double lThresh;
+		double lLowThresh;
+		double lHighThresh;
 		double varThresh;
 
 		// character classification
@@ -48,6 +51,7 @@ public:
 
 	// recognized AUVSI colors
 	unordered_map<string, Color> knownColors;
+	vector<Color> decisionBoundaryColors;
 
 private:
 	string folderPath;

@@ -14,6 +14,7 @@ Classifier::Classifier(const string &folderPath, const string &programPath)
 {
 	session = NULL;
 	knownColors = Color::getAUVSIColors();
+	decisionBoundaryColors = Color::getDecisionBoundaryColors();
 
 	if (folderPath[folderPath.size() - 1] != '/' && folderPath[folderPath.size() - 1] != '\\')
 	{
@@ -131,10 +132,43 @@ void Classifier::classifyColors(const Mat &image, vector<Mat> segmentedImages, s
 	resize(segmentedImages[0], segmentedImages[0], Size(image.cols, image.rows), 1);
 	resize(segmentedImages[1], segmentedImages[1], Size(image.cols, image.rows), 1);
 
+	// clean out the inside of the shape mask
+	for (int i = 0; i < image.rows; ++i)
+		for (int j = 0; j < image.cols; ++j)
+		{
+			if (segmentedImages[1].at<unsigned char>(i, j) >= 255)
+				segmentedImages[0].at<unsigned char>(i, j) = 0;
+		}
+
+	// erode the shape mask to get cleaner colors
+	Mat element = getStructuringElement(MORPH_RECT,
+		Size(3, 3),
+		Point(-1, -1));
+
+	erode(segmentedImages[0], segmentedImages[0], element);
+
+	//Color shapeColor;
+	vector<Vec3f> shapePixels;
+	for (int i = 0; i < image.rows; ++i)
+		for (int j = 0; j < image.cols; ++j)
+		{
+			if (segmentedImages[0].at<unsigned char>(i, j) >= 255)
+			{
+				Vec3f rbgColorf;
+				Vec3b bgrColor = image.at<Vec3b>(i, j);
+				rbgColorf[2] = bgrColor[0];
+				rbgColorf[1] = bgrColor[1];
+				rbgColorf[0] = bgrColor[2];
+				shapePixels.push_back(rbgColorf / 255.0);
+			}
+			else
+				mask.at<Vec3b>(i, j) = Vec3b(0, 0, 0);
+		}
+
 	// take the average color of shape and letter
 	// avgColor is in RGB 
 	Vec3f avgColorShape(0.0, 0.0, 0.0), avgColorLetter(0.0, 0.0, 0.0);
-	int shapePixels = 0, letterPixels = 0;
+	int numShapePixels = 0, numLetterPixels = 0;
 	for (int i = 0; i < image.rows; ++i)
 		for (int j = 0; j < image.cols; ++j)
 		{
@@ -144,23 +178,22 @@ void Classifier::classifyColors(const Mat &image, vector<Mat> segmentedImages, s
 				avgColorLetter[0] += bgrColor[2];
 				avgColorLetter[1] += bgrColor[1];
 				avgColorLetter[2] += bgrColor[0];
-				++letterPixels;
+				++numLetterPixels;
 			}
 			else
 			{
-				mask.at<Vec3b>(i, j) = Vec3b(0, 0, 0);
 				if (segmentedImages[0].at<unsigned char>(i, j) >= 255)
 				{
 					avgColorShape[0] += bgrColor[2];
 					avgColorShape[1] += bgrColor[1];
 					avgColorShape[2] += bgrColor[0];
-					++shapePixels;
+					++numShapePixels;
 				}
 			}	
 		}
 
-	avgColorShape /= (shapePixels * 255.0);
-	avgColorLetter /= (letterPixels * 255.0);
+	avgColorShape /= (numShapePixels * 255.0);
+	avgColorLetter /= (numLetterPixels * 255.0);
 	Color shapeColor(avgColorShape), letterColor(avgColorLetter);
 	Color closest;
 
@@ -171,9 +204,12 @@ void Classifier::classifyColors(const Mat &image, vector<Mat> segmentedImages, s
 	cout << "saturation: " << shapeColor.hls()[2] << " vs " << letterColor.hls()[2] << endl;
 	cout << "lightness: " << shapeColor.hls()[1] << " vs " << letterColor.hls()[1] << endl;
 	cout << "color var: " << shapeColor.colorVariance() << " vs " << letterColor.colorVariance() << endl; 
+	cout << shapeColor.hls() << endl;
+	cout << knownColors["red"].hls() << endl;
+	cout << knownColors["purple"].hls() << endl;
 	shapeColor.visualize(false);
-	knownColors["brown"].visualize(false);
-	knownColors["orange"].visualize(false);
+	knownColors["purple"].visualize(false);
+	knownColors["red"].visualize(false);
 	waitKey(0);
 	*/
 
@@ -191,7 +227,7 @@ void Classifier::classifyColorsHelper(const Color& color, Color& _closest)
 	double minDist = numeric_limits<double>::max();
 
 	// if it seems to be a grayscale color then we only compare lightness values
-	if (color.colorVariance() < params.varThresh || color.hls()[1] > params.lThresh || color.hls()[1] < 1.0 - params.lThresh)
+	if (color.colorVariance() < params.varThresh || color.hls()[1] > params.lHighThresh || color.hls()[1] < params.lLowThresh)
 	{
 		vector<Color> grayScale = { knownColors["black"], knownColors["gray"], knownColors["white"] };
 		for (int i = 0; i < grayScale.size(); ++i)
@@ -207,30 +243,51 @@ void Classifier::classifyColorsHelper(const Color& color, Color& _closest)
 		return;
 	}
 
-	for (auto it = knownColors.begin(); it != knownColors.end(); ++it)
-	{
-		// don't compare with grayscale colors
-		string name = it->first;
-		if (name == "black" || name == "gray" || name == "white")
-			continue;
+	// compute distance vector
+	multimap<double, Color> distances;
 
-		double dist = color.distanceFrom(it->second);
-		if (dist < minDist)
-		{
-			minDist = dist;
-			closest = it->second;
-		}
+	for (int i = 0; i < decisionBoundaryColors.size(); ++i)
+	{
+		double distance = color.distanceFrom(decisionBoundaryColors[i]);
+		distances.insert(make_pair(distance, decisionBoundaryColors[i]));
 	}
-
-	// brown and orange are distinguished best by saturation values
-	if (closest.name == "brown" || closest.name == "orange")
+	
+	// look at nearest neighbors, if there's a tie keep looking
+	unordered_map<string, int> count;
+	int maxCount = 0;
+	for (auto it = distances.begin(); it != distances.end(); ++it)
 	{
-		double satDistOrange = pow(color.hls()[2] - knownColors["orange"].hls()[2], 2.0);
-		double satDistBrown = pow(color.hls()[2] - knownColors["brown"].hls()[2], 2.0);
-		if (satDistOrange < satDistBrown)
-			closest = knownColors["orange"];
-		else
-			closest = knownColors["brown"];
+		bool clearWinner = false;
+		auto next = it;
+		++next;
+
+		// add all entries with same distance into count
+		while (next != distances.end() && it->first == next->first)
+		{
+			string name = it->second.name;
+			++count[name];
+			++next;
+			++it;
+			if (count[name] >= maxCount)
+			{
+				clearWinner = count[name] > maxCount;
+				maxCount = count[name];
+				closest = knownColors[name];
+			}
+		}
+		if (it != distances.end())
+		{
+			string name = it->second.name;
+			++count[name];
+			if (count[name] >= maxCount)
+			{
+				clearWinner = (count[name] > maxCount);
+				maxCount = count[name];
+				closest = knownColors[name];
+			}
+		}
+		if (clearWinner)
+			break;
 	}
 
 	_closest = closest;

@@ -389,6 +389,8 @@ void Identifier::writeCropResults(const std::vector<CropResult> &cropResults)
 		results->append("longitude=" + std::to_string(coords.lon) + "\n");
 		results->append("Background Color=" + cropResults[i].classifierResults.shapeColor + "\n");
 		results->append("Alphanumeric Color=" + cropResults[i].classifierResults.characterColor + "\n");
+		results->append("Shape=" + cropResults[i].classifierResults.shape + "\n");
+		results->append("Alphanumeric=" + string(1, cropResults[i].classifierResults.character) + "\n");
 		results->append("Description=" + cropResults[i].classifierResults.description + "\n");
 	}
 }
