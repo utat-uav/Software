@@ -239,7 +239,7 @@ void MissionViewer::fillTargetTable()
         // set subtable of classification info
         QTableWidget* classificationTable = new QTableWidget(6, 1);
         //classificationTable->setAttribute(Qt::WA_NoMousePropagation);
-        QString latlonStr = QString::number(uniqueTargets[i].latlon.lat) + " , " + QString::number(uniqueTargets[i].latlon.lat);
+        QString latlonStr = QString::number(uniqueTargets[i].latlon.lat) + " , " + QString::number(uniqueTargets[i].latlon.lon);
         QTableWidgetItem *latlonDesc = new QTableWidgetItem(latlonStr);
         QTableWidgetItem *charDesc = new QTableWidgetItem(uniqueTargets[i].alphanumeric);
         QTableWidgetItem *shapeDesc = new QTableWidgetItem(uniqueTargets[i].shape);
