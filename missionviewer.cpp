@@ -77,6 +77,7 @@ void MissionViewer::show()
         QPalette palette = ui->graphicsView->palette();
         palette.setColor(ui->graphicsView->backgroundRole(), QColor(230, 230, 230));
         ui->graphicsView->setPalette(palette);
+        ui->graphicsView->setMinimumSize(QSize(1.5 * tableWidth, 1.5 * tableWidth));
     }
 }
 
@@ -415,8 +416,8 @@ void MissionViewer::animateMovement(QPointF start, QPointF end)
 
         if (minZoom == -1.0)
         {
-            curCenter = (end - start) * sin(PI * s / 2.0) + start;
-            curZoom = (targetZoomFactor - startZoom) * asin(s) * 2.0 / PI + startZoom;
+            curCenter = (end - start) * pow(sin(PI * s / 2.0), 0.25) + start;
+            curZoom = (targetZoomFactor - startZoom) * s + startZoom;
         }
         else
         {
