@@ -50,6 +50,7 @@ MissionViewer::MissionViewer(QList<ImageWidget *> *items, QWidget *parent) :
     rowHeight = std::min(rowHeight, 400);
     iconLength = rowHeight;
 
+    connect(this, SIGNAL(requestUpdate()), this, SLOT(update()), Qt::ConnectionType::QueuedConnection);
     connect(ui->graphicsView, &CustomView::mouseMoved, this, &MissionViewer::mouseMoved);
 
     networkManager = new QNetworkAccessManager(this);
@@ -81,7 +82,7 @@ void MissionViewer::show()
 
 void MissionViewer::moveToTarget(int row, int column)
 {
-    animationLock.lock();
+    animationLock.tryLock();
     if (animationOngoing)
     {
         animationLock.unlock();
@@ -94,42 +95,14 @@ void MissionViewer::moveToTarget(int row, int column)
     QPointF targetPoint = uniqueTargets[row].latlon.convertToXY(avgLat);
     targetPoint = targetPoint * SCALE_FACTOR;
     QPointF targetCenter(targetPoint.x(), -targetPoint.y());
+    float resetZoom = initialScale / ui->graphicsView->transform().m11();
+    //ui->graphicsView->scale(targetZoomFactor * resetZoom, targetZoomFactor * resetZoom);
+    //ui->graphicsView->centerOn(targetCenter);
+    //ui->graphicsView->update();
+
+    // optional and somewhat buggy
     QtConcurrent::run(this, &MissionViewer::animateMovement, curCenter, targetCenter);
-}
-
-void MissionViewer::animateMovement(QPointF start, QPointF end)
-{
-    float startZoom = ui->graphicsView->transform().m11() / initialScale;
-
-    int iterations = float(animationDuration) / refreshInterval;
-    float ds = 1.0 / float(iterations);
-    float minZoom = 0.6 * startZoom;
-    for (int i = 1; i <= iterations; ++i)
-    {
-        float s = ds * i;
-        QPointF curCenter = (end - start) * pow(sin(PI * s / 2.0), 2.0) + start;
-
-        // reset scale
-        float currentScale = ui->graphicsView->transform().m11();
-        float resetZoom = initialScale / currentScale;
-        float curZoom;
-
-        if (i <= (iterations / 2.0))
-        {
-            curZoom = (minZoom - startZoom) * sin(PI * s) + startZoom;
-        }
-        else
-        {
-            curZoom = (minZoom - targetZoomFactor) * sin(PI * s) + targetZoomFactor;
-        }
-
-        // set views
-        ui->graphicsView->scale(curZoom * resetZoom, curZoom * resetZoom);
-        ui->graphicsView->centerOn(curCenter);
-        ui->graphicsView->update();
-        QThread::msleep(refreshInterval);
-    }
-    animationOngoing = false;
+    //animationOngoing = false;
 }
 
 void MissionViewer::refresh()
@@ -415,4 +388,57 @@ QPixmap MissionViewer::pixmapFromTarget(QString& folderPath, TargetData& target)
     QImage image(totalPath);
     QPixmap pixmap = QPixmap::fromImage(image);
     return pixmap;
+}
+
+
+void MissionViewer::animateMovement(QPointF start, QPointF end)
+{
+    float startZoom = ui->graphicsView->transform().m11() / initialScale;
+    int iterations = float(animationDuration) / refreshInterval;
+    float ds = 1.0 / float(iterations);
+    float minZoom;
+
+    if (startZoom > 2.0)
+        minZoom = 0.6 * startZoom;
+    else
+        minZoom = -1.0;
+
+    for (int i = 1; i <= iterations; ++i)
+    {
+        float s = ds * i;
+        QPointF curCenter;
+
+        // reset scale
+        float currentScale = ui->graphicsView->transform().m11();
+        float resetZoom = initialScale / currentScale;
+        float curZoom;
+
+        if (minZoom == -1.0)
+        {
+            curCenter = (end - start) * sin(PI * s / 2.0) + start;
+            curZoom = (targetZoomFactor - startZoom) * asin(s) * 2.0 / PI + startZoom;
+        }
+        else
+        {
+            // pull out a bit before going in
+            curCenter = (end - start) * pow(sin(PI * s / 2.0), 2.0) + start;
+            if (i <= (iterations / 2.0))
+            {
+                curZoom = (minZoom - startZoom) * sin(PI * s) + startZoom;
+            }
+            else
+            {
+                curZoom = 0.5 * (targetZoomFactor - minZoom) * cos(2.0 * PI * s) + (targetZoomFactor + minZoom) / 2.0;
+            }
+        }
+
+        // set views
+        ui->graphicsView->scale(curZoom * resetZoom, curZoom * resetZoom);
+        ui->graphicsView->centerOn(curCenter);
+        emit requestUpdate();
+        QThread::msleep(refreshInterval);
+    }
+    animationLock.lock();
+    animationOngoing = false;
+    animationLock.unlock();
 }

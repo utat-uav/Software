@@ -29,6 +29,9 @@ public:
 
     LatLon scenePointToLatLon(QPointF scenePoint);
 
+signals:
+    void requestUpdate();
+
 private slots:
     void moveToTarget(int row, int column);
     void on_actionrefresh_triggered();
@@ -40,9 +43,9 @@ private:
     // animation parameters
     QMutex animationLock;
     bool animationOngoing = false;
-    int refreshInterval = 16, animationDuration = 800;  // in ms
+    int refreshInterval = 15, animationDuration = 1000;  // in ms
     float initialScale = 3.35;  // ref val from transform().m11()
-    float targetZoomFactor = 7.0;
+    float targetZoomFactor = 6.0;
 
     int iconLength, tableWidth, rowHeight; // based on user desktop size
     Ui::MissionViewer *ui;
