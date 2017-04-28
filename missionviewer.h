@@ -51,6 +51,7 @@ private:
     Ui::MissionViewer *ui;
 
     QRectF viewRect;
+    QPointF initialCenter;
     double avgLat, avgLon;
     QList<ImageWidget *> *items;
     QList<TargetData> uniqueTargets;

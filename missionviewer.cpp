@@ -439,7 +439,5 @@ void MissionViewer::animateMovement(QPointF start, QPointF end)
         emit requestUpdate();
         QThread::msleep(refreshInterval);
     }
-    animationLock.lock();
     animationOngoing = false;
-    animationLock.unlock();
 }
