@@ -374,9 +374,13 @@ void MainWindowLoader::run()
                 target.y = resultFile.value("Crop "+QString::number(i)+"/Y").toInt();
                 target.latlon.lat = resultFile.value("Crop "+QString::number(i)+"/latitude", 0.0).toDouble();
                 target.latlon.lon = resultFile.value("Crop "+QString::number(i)+"/longitude", 0.0).toDouble();
+                target.shapeColor = resultFile.value("Crop "+QString::number(i)+"/Background Color").toString();
+                target.alphanumericColor = resultFile.value("Crop "+QString::number(i)+"/Alphanumeric Color").toString();
                 target.desc = resultFile.value("Crop "+QString::number(i)+"/Description").toString();
-                target.desc += "\nAlphanumeric Color: " + resultFile.value("Crop "+QString::number(i)+"/Alphanumeric Color").toString();
-                target.desc += "\nBackground Color: " + resultFile.value("Crop "+QString::number(i)+"/Background Color").toString();
+                target.desc += "\nAlphanumeric Color: " + target.alphanumericColor;
+                target.desc += "\nBackground Color: " + target.shapeColor;
+                target.alphanumeric = resultFile.value("Crop "+QString::number(i)+"/Alphanumeric").toString()[0];
+                target.shape = "to be added";
                 targetData.append(target);
             }
 

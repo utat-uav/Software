@@ -36,6 +36,14 @@ struct TargetData
     int y;
     LatLon latlon;
     QString desc;
+    QChar alphanumeric;
+    QString shape;
+    QString shapeColor;
+    QString alphanumericColor;
+    QString orientation;
+
+    // converts target info into a unique id string
+    QString idStr();
 };
 
 #endif // LIFESUPPORT_H

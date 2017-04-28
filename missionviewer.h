@@ -34,18 +34,23 @@ private slots:
     void networkManagerFinished(QNetworkReply *reply);
 
 private:
+    int iconLength, tableWidth, rowHeight; // resize based on user desktop size
     Ui::MissionViewer *ui;
 
     QRectF viewRect;
     double avgLat, avgLon;
     QList<ImageWidget *> *items;
+    QList<TargetData> uniqueTargets;
 
     QNetworkAccessManager *networkManager;
     void download(const QString &urlStr);
 
     void drawPath();
     void drawTargets();
+    void fillTargetTable();
     void getAvgLatLon();
+    QPixmap pixmapFromTarget(QString& folderPath, TargetData& target);
+    void removeDuplicates(QList<TargetData>& original);
 };
 
 #endif // MISSIONVIEWER_H

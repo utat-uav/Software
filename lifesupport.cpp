@@ -27,3 +27,10 @@ LatLon LatLon::xyToLatLon(QPointF xy, double avgLat)
 
     return latlon;
 }
+
+
+QString TargetData::idStr()
+{
+    // relevant fields separated by a colon
+    return QString(alphanumeric) + ":" + shape + ":" + shapeColor + ":" + alphanumericColor;
+}
