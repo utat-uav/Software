@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QGraphicsScene>
+#include <QMutex>
 #include <QtNetwork/QNetworkAccessManager>
 
 #include "imagewidget.h"
@@ -29,12 +30,21 @@ public:
     LatLon scenePointToLatLon(QPointF scenePoint);
 
 private slots:
+    void moveToTarget(int row, int column);
     void on_actionrefresh_triggered();
     void mouseMoved(QPointF scenePoint);
     void networkManagerFinished(QNetworkReply *reply);
 
 private:
-    int iconLength, tableWidth, rowHeight; // resize based on user desktop size
+
+    // animation parameters
+    QMutex animationLock;
+    bool animationOngoing = false;
+    int refreshInterval = 16, animationDuration = 800;  // in ms
+    float initialScale = 3.35;  // ref val from transform().m11()
+    float targetZoomFactor = 7.0;
+
+    int iconLength, tableWidth, rowHeight; // based on user desktop size
     Ui::MissionViewer *ui;
 
     QRectF viewRect;
@@ -51,6 +61,9 @@ private:
     void getAvgLatLon();
     QPixmap pixmapFromTarget(QString& folderPath, TargetData& target);
     void removeDuplicates(QList<TargetData>& original);
+
+    // run in a separate thread
+    void animateMovement(QPointF start, QPointF end);
 };
 
 #endif // MISSIONVIEWER_H

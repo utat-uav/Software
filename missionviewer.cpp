@@ -4,7 +4,9 @@
 #include <QCloseEvent>
 #include <QDebug>
 #include <QToolBar>
+#include <QPushButton>
 #include <QGraphicsEllipseItem>
+#include <QtConcurrent/QtConcurrent>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
@@ -19,6 +21,7 @@
 #include <string>
 
 #define SCALE_FACTOR 50000.0
+#define PI 3.141592653589793238462643383279502884L
 
 //https://maps.googleapis.com/maps/api/staticmap?maptype=satellite&center=43.83461,-79.2413&zoom=17&size=1280x1280&scale=2
 
@@ -74,6 +77,59 @@ void MissionViewer::show()
         palette.setColor(ui->graphicsView->backgroundRole(), QColor(230, 230, 230));
         ui->graphicsView->setPalette(palette);
     }
+}
+
+void MissionViewer::moveToTarget(int row, int column)
+{
+    animationLock.lock();
+    if (animationOngoing)
+    {
+        animationLock.unlock();
+        return;
+    }
+    animationOngoing = true;
+    animationLock.unlock();
+
+    QPointF curCenter = ui->graphicsView->mapToScene(ui->graphicsView->viewport()->rect().center());
+    QPointF targetPoint = uniqueTargets[row].latlon.convertToXY(avgLat);
+    targetPoint = targetPoint * SCALE_FACTOR;
+    QPointF targetCenter(targetPoint.x(), -targetPoint.y());
+    QtConcurrent::run(this, &MissionViewer::animateMovement, curCenter, targetCenter);
+}
+
+void MissionViewer::animateMovement(QPointF start, QPointF end)
+{
+    float startZoom = ui->graphicsView->transform().m11() / initialScale;
+
+    int iterations = float(animationDuration) / refreshInterval;
+    float ds = 1.0 / float(iterations);
+    float minZoom = 0.6 * startZoom;
+    for (int i = 1; i <= iterations; ++i)
+    {
+        float s = ds * i;
+        QPointF curCenter = (end - start) * pow(sin(PI * s / 2.0), 2.0) + start;
+
+        // reset scale
+        float currentScale = ui->graphicsView->transform().m11();
+        float resetZoom = initialScale / currentScale;
+        float curZoom;
+
+        if (i <= (iterations / 2.0))
+        {
+            curZoom = (minZoom - startZoom) * sin(PI * s) + startZoom;
+        }
+        else
+        {
+            curZoom = (minZoom - targetZoomFactor) * sin(PI * s) + targetZoomFactor;
+        }
+
+        // set views
+        ui->graphicsView->scale(curZoom * resetZoom, curZoom * resetZoom);
+        ui->graphicsView->centerOn(curCenter);
+        ui->graphicsView->update();
+        QThread::msleep(refreshInterval);
+    }
+    animationOngoing = false;
 }
 
 void MissionViewer::refresh()
@@ -248,18 +304,23 @@ void MissionViewer::fillTargetTable()
         classificationTable->horizontalHeader()->setStretchLastSection(true);
 
         // get total path of roi, set icon
-        QLabel *roi = new QLabel;
+        QPushButton *roi = new QPushButton;
         QString folderPath = items->at(i)->getFolderPath();
         QPixmap pixmap = pixmapFromTarget(folderPath, uniqueTargets[i]);
         pixmap = pixmap.scaled(iconLength, iconLength);
-        roi->setPixmap(pixmap);
-        roi->setAlignment(Qt::AlignHCenter);
-        //roi->setStyleSheet("QLabel { background-color : silver; selection-background-color : black; }");
+        roi->setIcon(QIcon(pixmap));
+        roi->setIconSize(QSize(iconLength, iconLength));
+        roi->setStyleSheet("QPushButton:focus { background-color : lightblue;}");
+
+        // pushbutton will ignore event as tableWidget is more qualified to handle it
+        roi->setAttribute(Qt::WA_TransparentForMouseEvents);
 
         ui->tableWidget->setCellWidget(rowNum, 0, roi);
         ui->tableWidget->setCellWidget(rowNum, 1, classificationTable);
         ++rowNum;
     }
+
+    connect(ui->tableWidget, &QTableWidget::cellDoubleClicked, this, &MissionViewer::moveToTarget);
 }
 
 void MissionViewer::on_actionrefresh_triggered()
