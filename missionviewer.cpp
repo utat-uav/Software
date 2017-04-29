@@ -67,7 +67,6 @@ void MissionViewer::show()
         QPalette palette = ui->graphicsView->palette();
         palette.setColor(ui->graphicsView->backgroundRole(), QColor(230, 230, 230));
         ui->graphicsView->setPalette(palette);
-        //ui->graphicsView->setMinimumSize(QSize(1.5 * tableWidth, 1.5 * tableWidth));
     }
 }
 
@@ -87,13 +86,9 @@ void MissionViewer::moveToTarget(int row, int column)
     targetPoint = targetPoint * SCALE_FACTOR;
     QPointF targetCenter(targetPoint.x(), -targetPoint.y());
     float resetZoom = initialScale / ui->graphicsView->transform().m11();
-    //ui->graphicsView->scale(targetZoomFactor * resetZoom, targetZoomFactor * resetZoom);
-    //ui->graphicsView->centerOn(targetCenter);
-    //ui->graphicsView->update();
 
     // optional and somewhat buggy
     QtConcurrent::run(this, &MissionViewer::animateMovement, curCenter, targetCenter);
-    //animationOngoing = false;
 }
 
 void MissionViewer::refresh()
@@ -329,9 +324,6 @@ void MissionViewer::on_actionrefresh_triggered()
 
     // fill table with targets and resize tableWidget properly
     fillTargetTable();
-    //ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    //QHeaderView *verticalHeader = ui->tableWidget->verticalHeader();
-    //verticalHeader->setSectionResizeMode(QHeaderView::Fixed);
     ui->tableWidget->resizeColumnsToContents();
     ui->tableWidget->resizeRowsToContents();
     ui->tableWidget->setIconSize(QSize(iconLength, iconLength));
@@ -413,7 +405,7 @@ void MissionViewer::animateMovement(QPointF start, QPointF end)
 
         if (minZoom == -1.0)
         {
-            curCenter = (end - start) * pow(sin(PI * s / 2.0), 0.25) + start;
+            curCenter = (end - start) * pow(sin(PI * s / 2.0), 0.5) + start;
             curZoom = (targetZoomFactor - startZoom) * s + startZoom;
         }
         else
