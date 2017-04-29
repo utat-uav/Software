@@ -18,7 +18,8 @@ import random
 ROTATION_AMOUNT = 12
 WIDTH = 525
 HEIGHT = 519
-SCALE_FACTOR = 1.1
+#originally scale_factor was 1.1
+SCALE_FACTOR = 1.2
 DIMENSION = 40
 KERNEL_0 = (2,2)
 KERNEL_1 = (3,3)
@@ -27,14 +28,16 @@ KERNEL_1 = (3,3)
 NUMCLASSES = 11
 NUMUNIQUE = 3
 
+##FIX CODE GIVING LIKE 2+ COPIES OF IMAGE ON TOP OF EACH OTHER
+
 '''input image is assumed to already be cropped and of proper size'''
-def addnoise(image,kernel):
+def addnoise(image,kernel, background):
 
 
 
     circular_Kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, kernel)
     #High scale factor is to make sure none of the noise is cropped out
-    image = crop_image(image,1.45)
+    image = crop_image(image,background, 1.45)
     image = cv2.resize(image,(40,40),interpolation = cv2.INTER_AREA)
 
 
@@ -46,7 +49,7 @@ def addnoise(image,kernel):
     #(5,5) was used originallzy and it was cv2.GaussianBlur(image,(5,5),0)
 
     #Creating the noise like this is satisfactory, for now at least
-    noise = cv2.imread("Background.png", cv2.IMREAD_COLOR)
+    noise = np.array(background, copy=True) 
     noise = cv2.resize(noise, (int(blur.shape[1]) ,int (blur.shape[0])), interpolation = cv2.INTER_AREA)
     make_random_white(noise)
 
@@ -104,7 +107,7 @@ def make_random_white(image):
 
 
 
-def compress_img(image, compression_amount):
+def compress_img(image, background, compression_amount):
     '''image is simply the opencv image file
     compression_amount is how much you want the file to be compressed, For
     example, a compression_amount of 2 indicates you want the horizontal size of the
@@ -113,13 +116,13 @@ def compress_img(image, compression_amount):
     dim = (WIDTH//compression_amount, HEIGHT)
     resized = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
 
-    l_img = cv2.imread("Background.png", cv2.IMREAD_COLOR)
+    l_img = np.array(background, copy=True) 
     s_img = resized
 
     x_offset= WIDTH// 2 - s_img.shape[1]//2
     y_offset= HEIGHT // 2 - s_img.shape[0]//2
     l_img[y_offset:y_offset+s_img.shape[0], x_offset:x_offset+s_img.shape[1]] = s_img
-    image = crop_image(l_img, SCALE_FACTOR)
+    image = crop_image(l_img, background, SCALE_FACTOR)
 
     res = cv2.resize(image, (WIDTH, HEIGHT), interpolation = cv2.INTER_LINEAR)
     return res
@@ -127,15 +130,14 @@ def compress_img(image, compression_amount):
 
 
 
-def crop_image(image,sf):
+def crop_image(image, background, sf):
     '''Returns a cropped image to a constant scale factor, i.e the shape will take up 1/scale_factor X 100% of the final image'''
-    l_img = cv2.imread("Background.png", cv2.IMREAD_COLOR)
     s_img = image
 
     parameters = (find_limiting_p(image))
 
 
-    bg = cv2.imread("Background.png", cv2.IMREAD_COLOR)
+    bg = np.array(background, copy=True) 
 
     a1 = parameters[0][1][0]
     a2 = parameters[0][1][1]
@@ -211,17 +213,21 @@ if __name__ == '__main__':
     res_labels = np.empty([(NUMCLASSES + 1) * (NUMUNIQUE + 1) * 3 * 30 * 3, 1])
     
     p_labels = np.identity(NUMCLASSES + 1)
+    background = cv2.imread("Background.png", cv2.IMREAD_COLOR)
     #NUMCLASSES + 1
     for i in range(NUMCLASSES + 1):
         #NUMUNIQUE + 1
         for p in range(NUMUNIQUE + 1):
             print("Starting on " + str(i) + "_" + str(p))
             
-            img = cv2.imread("Base Set of Shapes\\" + str(i) + '_' + str(p) + '.png', cv2.IMREAD_COLOR)
+            os.chdir("Base Set of Shapes")
+            #img str(i) + '_= cv2.imread("Base Set of Shapes\\" + str(i) + '_' + str(p) + '.png', cv2.IMREAD_COLOR)
+            img = cv2.imread(str(i) + '_' + str(p) + '.png', cv2.IMREAD_COLOR)
+            os.chdir('..')
+            
             final = img
             
             # newpath = str(i) + '_' + str(p) + "kendrick"
-            # background = cv2.imread("Background.png", cv2.IMREAD_COLOR)
             # if not os.path.exists(newpath):
             #     os.makedirs(newpath)
             # os.chdir(newpath)
@@ -230,25 +236,29 @@ if __name__ == '__main__':
             # new_imgs = [new_img]
             #compress first and then rotate, because of circle, and hexagon
             for k in range(1,4):
-                new_img = compress_img(img, k)
+                new_img = compress_img(img, background, k)
                 new_img = cv2.resize(new_img, (DIMENSION,DIMENSION), interpolation = cv2.INTER_AREA)     
-                new_img = crop_image(new_img, SCALE_FACTOR)       
+                new_img = crop_image(new_img, background, SCALE_FACTOR)       
                 # new_imgs.extend(new_img)
     
                 for j in range(1, 31):
                     
                     new_new_img = rotate_img(new_img, j*12)
-                    new_new_img = crop_image(new_new_img, SCALE_FACTOR)
+                    new_new_img = crop_image(new_new_img, background, SCALE_FACTOR)
                     new_new_img = cv2.resize(new_new_img, (DIMENSION,DIMENSION), interpolation = cv2.INTER_AREA)     
                     for l in range(0,3):
                         if (l == 1):
-                            new_new_img = addnoise(new_new_img, KERNEL_0)
+                            new_new_img = addnoise(new_new_img, KERNEL_0, background)
                         elif (l == 2):
-                            new_new_img = addnoise(new_new_img, KERNEL_1)
+                            new_new_img = addnoise(new_new_img, KERNEL_1, background)
                         
+                        
+                        threshold(new_new_img)
                         final = cv2.cvtColor(new_new_img, cv2.COLOR_BGR2GRAY)
                         final_f = final.flatten()
-                        
+                        # cv2.imshow("image", final)
+                        # cv2.waitKey(0)
+                        # cv2.destroyAllWindows
                         res[count] = final_f / 255.0
                         res_labels[count] = i
                         count = count + 1
