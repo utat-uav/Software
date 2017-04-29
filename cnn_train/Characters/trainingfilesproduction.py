@@ -84,9 +84,9 @@ def rotateImg(angle, image):
     return rotated
 
 # Script parameters
-directory = "D:/Workspace/UAV/Software/cnn_train/FontDatabase/English/Fnt"
+directory = "D:/Workspace/UAV/Software/cnn_train/Characters/FontDatabase/English/Fnt"
 # outputDirectory
-outputDirectory = "D:/Workspace/UAV/Software/cnn_train/ProcessedFonts"
+outputDirectory = "D:/Workspace/UAV/Software/cnn_train/Characters/ProcessedFonts"
 
 # Stores the existing classes
 D = {}
@@ -178,10 +178,10 @@ for imagePath in imagePaths:
     for rotIdx in range(numRotations):
         angle = rotIdx * (360 / numRotations)
         rotatedImg = rotateImg(angle, image)
-		
+
         # Convert to grayscale
         rotatedImg = cv2.cvtColor(rotatedImg, cv2.COLOR_RGB2GRAY)  
-		
+
         # Threshold it into a binary image
         ret, rotatedImg = cv2.threshold(rotatedImg, 128, 1, cv2.THRESH_BINARY)
         
