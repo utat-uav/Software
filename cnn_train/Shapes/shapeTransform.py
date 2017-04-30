@@ -21,8 +21,8 @@ HEIGHT = 519
 #originally scale_factor was 1.1
 SCALE_FACTOR = 1.2
 DIMENSION = 40
-KERNEL_0 = (2,2)
-KERNEL_1 = (3,3)
+KERNEL_0 = (1,1)
+KERNEL_1 = (1,1)
 
 #classes from 0 to 11, 0, 1, 2, ... 11
 NUMCLASSES = 11
@@ -37,7 +37,7 @@ def addnoise(image,kernel, background):
 
     circular_Kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, kernel)
     #High scale factor is to make sure none of the noise is cropped out
-    image = crop_image(image,background, 1.45)
+    image = crop_image(image,background, 1.30)
     image = cv2.resize(image,(40,40),interpolation = cv2.INTER_AREA)
 
 
@@ -107,7 +107,7 @@ def make_random_white(image):
 
 
 
-def compress_img(image, background, compression_amount):
+def compress_img(image, background, compression_amount):    
     '''image is simply the opencv image file
     compression_amount is how much you want the file to be compressed, For
     example, a compression_amount of 2 indicates you want the horizontal size of the
@@ -264,6 +264,13 @@ if __name__ == '__main__':
                         count = count + 1
                         # a = str(i) + '_' + str(p) 'shape' + str(j*12) + 'rot_' + str(k) + 'squish' + str(l) + 'blur.png'
                         # cv2.imwrite(a, final)
+                        
+                        # testingImg = np.reshape(res[count-1], (40, 40))*255
+                        # cv2.imshow("test", testingImg)
+                        # cv2.waitKey(0)
+                        # cv2.destroyAllWindows()
+                        # print(str(testingImg.shape))
+                        
             # os.chdir('..')
                     
     

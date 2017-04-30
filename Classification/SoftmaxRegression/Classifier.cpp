@@ -36,7 +36,7 @@ bool Classifier::initialize()
 	TF_CHECK_OK(NewSession(SessionOptions(), &session));
 
 	GraphDef graph_def;
-	TF_CHECK_OK(ReadBinaryProto(Env::Default(), folderPath + "frozen_model.pb", &graph_def));
+	TF_CHECK_OK(ReadBinaryProto(Env::Default(), folderPath + "char_frozen_model.pb", &graph_def));
 
 	// Add the graph to the session
 	TF_CHECK_OK(session->Create(graph_def));
