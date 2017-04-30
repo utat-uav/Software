@@ -384,7 +384,7 @@ void MainWindowLoader::run()
                 target.desc += "\nAlphanumeric Color: " + target.alphanumericColor;
                 target.desc += "\nBackground Color: " + target.shapeColor;
                 target.alphanumeric = resultFile.value("Crop "+QString::number(i)+"/Alphanumeric").toString()[0];
-                target.shape = "to be added";
+                target.shape = resultFile.value("Crop "+QString::number(i)+"/Shape").toString();
                 targetData.append(target);
             }
 

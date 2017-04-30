@@ -698,6 +698,7 @@ void MissionViewer::postTargetIdx(int idx)
     targetJsonObj["background_color"] = shapeColorDesc->text();
     targetJsonObj["alphanumeric_color"] = charColorDesc->text();
     targetJsonObj["alphanumeric"] = charDesc->text();
+    targetJsonObj["shape"] = shapeDesc->text();
     targetJsonObj["autonomous"] = true;
 
     QJsonDocument jsonDoc(targetJsonObj);

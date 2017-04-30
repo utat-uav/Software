@@ -13,6 +13,7 @@ public:
 		char character;
 		double characterConfidence;
 		string shape;
+		double shapeConfidence;
 		string description;
 		string shapeColor;
 		string characterColor;
@@ -48,6 +49,7 @@ public:
 	int classify(const string &imagePath, Results &results);
 	int classify(const Mat &imageMat, Results &results);
 	static char getCharFromIdx(int idx);
+	static std::string getShapeFromIdx(int idx);
 
 	// recognized AUVSI colors
 	unordered_map<string, Color> knownColors;
@@ -58,11 +60,12 @@ private:
 	string programPath;
 	Params params;
 
-	Session *session;
+	Session *charSession;
+	Session *shapeSession;
 
 	void processImage(Mat &image);
-	void classifyCharacterHelper(const vector<Mat> &images, vector<char> &chars, vector<double> &confidences);
-	void classifyCharacter(const Mat &image, char &c, double &confidence);
+	void classifyWithCNNHelper(Session *session, const vector<Mat> &images, vector<int> &classIdxs, vector<double> &confidences);
+	void classifyWithCNN(Session *session, const Mat &image, int &classIdx, double &confidence);
 	void classifyColors(const Mat &image, vector<Mat> segmentedImages, string& shapeColor, string& letterColor);
 	void classifyColorsHelper(const Color& color, Color& closest);
 };

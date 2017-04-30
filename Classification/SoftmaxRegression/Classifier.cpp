@@ -12,7 +12,8 @@
 Classifier::Classifier(const string &folderPath, const string &programPath)
 	: folderPath(folderPath), programPath(programPath)
 {
-	session = NULL;
+	charSession = NULL;
+	shapeSession = NULL;
 	knownColors = Color::getAUVSIColors();
 	decisionBoundaryColors = Color::getDecisionBoundaryColors();
 
@@ -24,22 +25,42 @@ Classifier::Classifier(const string &folderPath, const string &programPath)
 
 Classifier::~Classifier()
 {
-	if (session)
+	if (charSession)
 	{
-		session->Close();
-		delete session;
+		charSession->Close();
+		delete charSession;
+	}
+
+	if (shapeSession)
+	{
+		shapeSession->Close();
+		delete shapeSession;
 	}
 }
 
 bool Classifier::initialize()
 {
-	TF_CHECK_OK(NewSession(SessionOptions(), &session));
+	// Char initialization
+	{
+		TF_CHECK_OK(NewSession(SessionOptions(), &charSession));
 
-	GraphDef graph_def;
-	TF_CHECK_OK(ReadBinaryProto(Env::Default(), folderPath + "char_frozen_model.pb", &graph_def));
+		GraphDef charGraphDef;
+		TF_CHECK_OK(ReadBinaryProto(Env::Default(), folderPath + "char_frozen_model.pb", &charGraphDef));
 
-	// Add the graph to the session
-	TF_CHECK_OK(session->Create(graph_def));
+		// Add the graph to the session
+		TF_CHECK_OK(charSession->Create(charGraphDef));
+	}
+	
+	// Shape initialization
+	{
+		TF_CHECK_OK(NewSession(SessionOptions(), &shapeSession));
+
+		GraphDef charGraphDef;
+		TF_CHECK_OK(ReadBinaryProto(Env::Default(), folderPath + "shape_frozen_model.pb", &charGraphDef));
+
+		// Add the graph to the session
+		TF_CHECK_OK(shapeSession->Create(charGraphDef));
+	}
 
 	return true;
 }
@@ -65,56 +86,84 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 
 	results.characterConfidence = 0;
 
-	//for (unsigned i = 0; i < segmentedImages.size(); ++i)
-	for (unsigned i = 1; i < segmentedImages.size(); ++i) // Second image is always the character
+	// Default return values
+	results.character = '-';
+	results.characterConfidence = 0;
+	results.shape = "";
+	results.shapeConfidence = 0;
+
+	// Check the segmentation results
+	if (segmentedImages[0].empty() || segmentedImages[1].empty())
 	{
-		if (segmentedImages[i].empty())
+		if (!falsePositiveNoted)
 		{
-			if (!falsePositiveNoted)
+			falsePositiveNoted = true;
+			cout << "Invalid image. Likely a false positive ..." << endl;
+		}
+	}
+	else
+	{
+		// i = 0 is the shape
+		// i = 1 is the character
+		for (unsigned i = 0; i < segmentedImages.size(); ++i)
+		{
+			double confidence = 0;
+			int id = -1;
+
+			// Do classification
+			try
+			{
+				// classify D:\Workspace\UAV\Test Flights\April 14 Test 3_output\im0346roi3.jpg
+				Session *session = (i == 0) ? shapeSession : charSession;
+				classifyWithCNN(session, segmentedImages[i], id, confidence);
+			}
+			catch (cv::Exception &e)
 			{
 				falsePositiveNoted = true;
-				cout << "Invalid image. Likely a false positive ..." << endl;
+				break;
 			}
-			continue;
-		}
 
-		double confidence = 0;
-		char c = '-';
-
-		// Default return values
-		results.character = '-';
-		results.characterConfidence = 0;
-
-		// Do classification
-		try
-		{
-			// classify D:\Workspace\UAV\Test Flights\Flight3_output\im0027roi0.jpg
-			classifyCharacter(segmentedImages[i], c, confidence);
-		}
-		catch (cv::Exception &e)
-		{
-			continue;
-		}
-
-		// Anything below 98% is uncertainty that we don't need
-		if (confidence < params.confidenceThresh)
-		{
-			cout << "Invalid image. Confidence of " << confidence << " for a " << c << " is too low. Likely a false positive ..." << endl;
-		}
-		else
-		{
-			results.character = c;
-			results.characterConfidence = confidence;
-
-			std::stringstream ss;
-			ss << "Classified as " << c << " with " << confidence << " confidence";
-			results.description = ss.str();
-			cout << results.description << endl;
+			// Anything below 98% is uncertainty that we don't need
+			if (confidence < params.confidenceThresh)
+			{
+				cout << "Invalid image. Confidence of " << confidence << " is too low. Likely a false positive ..." << endl;
+				falsePositiveNoted = true;
+				break;
+			}
+			else
+			{
+				switch (i)
+				{
+				// Shape case
+				case 0:
+				{
+					results.shape = getShapeFromIdx(id);
+					results.shapeConfidence = confidence;
+					break;
+				}
+				// Character case
+				case 1:
+				{
+					results.character = getCharFromIdx(id);
+					results.characterConfidence = confidence;
+					break;
+				}
+				default:
+					break;
+				}
+				
+			}
 		}
 	}
 
 	if (!falsePositiveNoted)
 	{
+		std::stringstream ss;
+		ss << "Classified as (" << results.character << ", " << results.shape  << ") with (" <<
+			results.characterConfidence << ", " << results.shapeConfidence << ") confidence. ";
+		results.description = ss.str();
+		cout << results.description << endl;
+
 		classifyColors(imageMat, segmentedImages, results.shapeColor, results.characterColor);
 		cout << "Classified alphanumeric color as " << results.characterColor << endl;
 		cout << "Classified shape color as " << results.shapeColor << endl;
@@ -294,7 +343,8 @@ void Classifier::classifyColorsHelper(const Color& color, Color& _closest)
 }
 
 
-void Classifier::classifyCharacter(const Mat &image, char &c, double &confidence)
+void Classifier::classifyWithCNN(Session *session, const Mat &image,
+								 int &classIdx, double &confidence)
 {
 	confidence = 0;
 	vector<Mat> images;
@@ -306,19 +356,19 @@ void Classifier::classifyCharacter(const Mat &image, char &c, double &confidence
 		images.push_back(rotated);
 	}
 
-	vector<char> chars;
+	vector<int> classIdxs;
 	vector<double> confidences;
-	classifyCharacterHelper(images, chars, confidences);
+	classifyWithCNNHelper(session, images, classIdxs, confidences);
 
 	// Get the best confidence
 	confidence = confidences[0];
-	c = chars[0];
+	classIdx = classIdxs[0];
 	for (int i = 1; i < confidences.size(); ++i)
 	{
 		if (confidences[i] >= confidence)
 		{
 			confidence = confidences[i];
-			c = chars[i];
+			classIdx = classIdxs[i];
 		}
 	}
 }
@@ -327,8 +377,8 @@ void Classifier::classifyCharacter(const Mat &image, char &c, double &confidence
  * Requires a 40x40 black and white binary image
  * This function can take in multiple inputs (as a batch) and outputs multiple results
  */
-void Classifier::classifyCharacterHelper(const vector<Mat> &images, // Inputs
-										 vector<char> &chars, vector<double> &confidences) // Outputs
+void Classifier::classifyWithCNNHelper(Session *session, const vector<Mat> &images, // Inputs
+									   vector<int> &classIdxs, vector<double> &confidences) // Outputs
 {
 	assert(images.size() > 0);
 	assert(chars.size() == 0);
@@ -411,9 +461,8 @@ void Classifier::classifyCharacterHelper(const vector<Mat> &images, // Inputs
 			denominator += exponent;
 		}
 
-		char c = getCharFromIdx(id);
 		double confidence = numerator / denominator;
-		chars.push_back(c);
+		classIdxs.push_back(id);
 		confidences.push_back(confidence);
 
 		//std::cout << "DEBUG: " << c << " | " << confidence << std::endl;
@@ -461,4 +510,37 @@ char Classifier::getCharFromIdx(int idx)
 	}
 
 	return c;
+}
+
+std::string Classifier::getShapeFromIdx(int idx)
+{
+	switch (idx)
+	{
+	case 0:
+		return "rectangle";
+	case 1:
+		return "triangle";
+	case 2:
+		return "circle";
+	case 3:
+		return "star";
+	case 4:
+		return "trapezoid";
+	case 5:
+		return "quarter_circle";
+	case 6:
+		return "semi_circle";
+	case 7:
+		return "pentagon";
+	case 8:
+		return "hexagon";
+	case 9:
+		return "heptagon";
+	case 10:
+		return "octagon";
+	case 11:
+		return "cross";
+	default:
+		return "SHAPE IDX ERROR";
+	}
 }
