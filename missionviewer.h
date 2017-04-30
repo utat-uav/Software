@@ -84,7 +84,7 @@ private:
         GET
     };
     bool auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
-                      QByteArray &replyData);
+                      const QString &contentTypeHeader, QByteArray &replyData);
 
     void login();
     void doLogin();

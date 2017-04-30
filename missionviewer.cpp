@@ -500,7 +500,7 @@ void MissionViewer::login()
                         "&password=" + serverInfo.password);
 
         QByteArray replyData;
-        if (auvsiRequest("/api/login", POST, data.toUtf8(), replyData))
+        if (auvsiRequest("/api/login", POST, data.toUtf8(), "", replyData))
         {
             qDebug() << "Success" << replyData;
 
@@ -528,7 +528,7 @@ void MissionViewer::login()
  * Logs out the user if an invalid request is made
  */
 bool MissionViewer::auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
-                                 QByteArray &replyData)
+                                 const QString &contentTypeHeader, QByteArray &replyData)
 {
     if ((loginAction->text() == "Login") != (!serverInfo.loggedIn))
     {
@@ -544,6 +544,10 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
     if (requestType == POST)
     {
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    }
+    else if (contentTypeHeader != "")
+    {
+        request.setHeader(QNetworkRequest::ContentTypeHeader, contentTypeHeader);
     }
 
     if (serverInfo.loggedIn)
@@ -685,9 +689,38 @@ void MissionViewer::postTargetIdx(int idx)
     QString targetJsonStr = jsonDoc.toJson();
 
     QByteArray replyData;
-    if (auvsiRequest("/api/targets", POST, targetJsonStr.toUtf8(), replyData))
+    if (auvsiRequest("/api/targets", POST, targetJsonStr.toUtf8(), "application/json", replyData))
     {
-        qDebug() << "Success" << replyData;
+        //qDebug() << "Success" << replyData;
+
+        QJsonObject replyObj = QJsonDocument::fromJson(replyData).object();
+        int targetID = replyObj["id"].toInt();
+        //qDebug() << "id is " << targetID;
+
+        QPushButton *roiPushButton = dynamic_cast<QPushButton*>(ui->tableWidget->cellWidget(idx, 0));
+        if (roiPushButton == NULL)
+        {
+            qFatal("roiPushButton == NULL");
+        }
+
+        QPixmap thumbPixmap = roiPushButton->icon().pixmap(QSize(iconLength, iconLength));
+        QByteArray bArray;
+        QBuffer buffer(&bArray);
+        buffer.open(QIODevice::WriteOnly);
+        thumbPixmap.save(&buffer, "JPEG");
+//        thumbPixmap.save("C:/Users/Davis/Desktop/test.jpeg", "JPEG");
+//        qDebug() << bArray;
+//        qDebug() << bArray.size();
+
+        if (auvsiRequest("/api/targets/" + QString::number(targetID) + "/image",
+                         POST, bArray, "application/jpeg", replyData))
+        {
+            qDebug() << "Success" << replyData;
+        }
+    }
+    else
+    {
+        qDebug() << "Failure" << replyData;
     }
 }
 
