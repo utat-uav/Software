@@ -49,8 +49,8 @@ private:
     QMutex animationLock;
     bool animationOngoing = false;
     int refreshInterval = 15, animationDuration = 1000;  // in ms
-    float initialScale = 3.35;  // ref val from transform().m11()
-    float targetZoomFactor = 6.0;
+    double initialScale = 3.35;  // ref val from transform().m11()
+    double targetZoomFactor = 6.0;
 
     int iconLength;
     Ui::MissionViewer *ui;
@@ -66,7 +66,7 @@ private:
     // For interoping with the auvsi server
     InteropLogin::ServerInfo serverInfo;
 
-    void download(const QString &urlStr);
+    void downloadMap(const QString &urlStr);
 
     void drawPath();
     void drawTargets();

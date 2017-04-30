@@ -330,7 +330,7 @@ void MissionViewer::on_actionrefresh_triggered()
 
     QString imagePath = "https://maps.googleapis.com/maps/api/staticmap?maptype=satellite&center=" + QString::number(avgLat, 'f', 10) +
             "," + QString::number(avgLon, 'f', 10) + "&zoom=16&size=1280x1280&scale=2";
-    download(imagePath);
+    downloadMap(imagePath);
 
     // get unique targets
     for (int i = 0; i < items->size(); ++i)
@@ -350,7 +350,7 @@ void MissionViewer::on_actionrefresh_triggered()
     ui->tableWidget->setIconSize(QSize(iconLength, iconLength));
 }
 
-void MissionViewer::download(const QString &urlStr)
+void MissionViewer::downloadMap(const QString &urlStr)
 {
     QUrl url(urlStr);
     QNetworkRequest request(url);
@@ -706,11 +706,8 @@ void MissionViewer::postTargetIdx(int idx)
     QByteArray replyData;
     if (auvsiRequest("/api/targets", POST, targetJsonStr.toUtf8(), "application/json", replyData))
     {
-        //qDebug() << "Success" << replyData;
-
         QJsonObject replyObj = QJsonDocument::fromJson(replyData).object();
         int targetID = replyObj["id"].toInt();
-        //qDebug() << "id is " << targetID;
 
         QPushButton *roiPushButton = dynamic_cast<QPushButton*>(ui->tableWidget->cellWidget(idx, 0));
         if (roiPushButton == NULL)
@@ -723,9 +720,6 @@ void MissionViewer::postTargetIdx(int idx)
         QBuffer buffer(&bArray);
         buffer.open(QIODevice::WriteOnly);
         thumbPixmap.save(&buffer, "JPEG");
-//        thumbPixmap.save("C:/Users/Davis/Desktop/test.jpeg", "JPEG");
-//        qDebug() << bArray;
-//        qDebug() << bArray.size();
 
         if (auvsiRequest("/api/targets/" + QString::number(targetID) + "/image",
                          POST, bArray, "application/jpeg", replyData))
