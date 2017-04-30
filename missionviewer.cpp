@@ -488,6 +488,7 @@ void MissionViewer::login()
         {
             qDebug() << "Success" << replyData;
 
+            // Do the actual login ui changes
             assert(!serverInfo.loggedIn);
             doLogin();
         }
@@ -525,9 +526,8 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
 
     if (serverInfo.loggedIn)
     {
-        QNetworkCookieJar *cookieJar = new QNetworkCookieJar(&manager);
-        cookieJar->insertCookie(serverInfo.cookie);
-        manager.setCookieJar(cookieJar);
+        QString str = "sessionid=" + serverInfo.cookie.value();
+        request.setRawHeader("Cookie", str.toUtf8());
     }
 
     QEventLoop eventLoop;
@@ -554,6 +554,7 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
     // Success
     if (reply->error() == QNetworkReply::NoError)
     {
+        // Check if new cookie (cached login)
         if (reply->hasRawHeader("Set-Cookie"))
         {
             QVariant cookieVar = reply->header(QNetworkRequest::SetCookieHeader);
@@ -565,8 +566,6 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
                     serverInfo.cookie = cookie;
                 }
             }
-
-            qDebug() << "Has cookie" << serverInfo.cookie;
         }
 
         replyData = reply->readAll();
