@@ -389,6 +389,7 @@ void MissionViewer::mapNetworkManagerFinished(QNetworkReply *reply)
     imageItem->setScale(imgScale);
     imageItem->setZValue(-1);
     ui->graphicsView->scene()->addItem(imageItem);
+    delete reply;
 }
 
 
@@ -556,12 +557,12 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
         request.setRawHeader("Cookie", str.toUtf8());
     }
 
+    // Connect an event loop for blocking later
     QEventLoop eventLoop;
     QObject::connect(&manager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
 
-    // Do POST
+    // Do request
     QNetworkReply *reply;
-
     switch (requestType)
     {
     case POST:
@@ -575,7 +576,21 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
         return false;
     }
 
+    // Blocking starts here
+    QTimer timer;
+    timer.setSingleShot(true);
+    connect(&timer, SIGNAL(timeout()), &eventLoop, SLOT(quit()));
+    timer.start(2000); // 2 seconds
     eventLoop.exec();
+
+    // If the timer is done, then we timed out
+    if (!timer.isActive())
+    {
+        disconnect(reply, SIGNAL(finished()), &eventLoop, SLOT(quit()));
+        delete reply;
+        return false;
+    }
+    timer.stop();
 
     // Success
     if (reply->error() == QNetworkReply::NoError)
