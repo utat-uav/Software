@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     imagesetprocessor.cpp \
     loadingbardialog.cpp \
     missionviewer.cpp \
-    customview.cpp
+    customview.cpp \
+    interoplogin.cpp
 
 HEADERS  += mainwindow.h \
     imagewidget.h \
@@ -40,7 +41,8 @@ HEADERS  += mainwindow.h \
     imagesetprocessor.h \
     loadingbardialog.h \
     missionviewer.h \
-    customview.h
+    customview.h \
+    interoplogin.h
 
 FORMS    += mainwindow.ui \
     imagewidget.ui \
@@ -50,7 +52,8 @@ FORMS    += mainwindow.ui \
     targetwindow.ui \
     imagesetprocessor.ui \
     loadingbardialog.ui \
-    missionviewer.ui
+    missionviewer.ui \
+    interoplogin.ui
 
 DISTFILES += \
     clasic.png \

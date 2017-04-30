@@ -7,6 +7,7 @@
 #include <QtNetwork/QNetworkAccessManager>
 
 #include "imagewidget.h"
+#include "interoplogin.h"
 
 class CustomView;
 
@@ -36,9 +37,12 @@ private slots:
     void moveToTarget(int row, int column);
     void on_actionrefresh_triggered();
     void mouseMoved(QPointF scenePoint);
-    void networkManagerFinished(QNetworkReply *reply);
+    void mapNetworkManagerFinished(QNetworkReply *reply);
 
 private:
+
+    // Actions
+    QAction *loginAction;
 
     // animation parameters
     QMutex animationLock;
@@ -56,7 +60,11 @@ private:
     QList<ImageWidget *> *items;
     QList<TargetData> uniqueTargets;
 
-    QNetworkAccessManager *networkManager;
+    QNetworkAccessManager *mapNetworkManager;
+
+    // For interoping with the auvsi server
+    InteropLogin::ServerInfo serverInfo;
+
     void download(const QString &urlStr);
 
     void drawPath();
@@ -68,6 +76,17 @@ private:
 
     // run in a separate thread
     void animateMovement(QPointF start, QPointF end);
+
+    enum
+    {
+        POST,
+        GET
+    };
+    void login();
+    void doLogin();
+    void doLogout();
+    bool auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
+                      QByteArray &replyData);
 };
 
 #endif // MISSIONVIEWER_H

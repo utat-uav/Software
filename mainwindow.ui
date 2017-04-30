@@ -128,6 +128,8 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionLoad_From_Folder"/>
+    <addaction name="separator"/>
     <addaction name="actionProcess_Image_Set"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -246,6 +248,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+M</string>
+   </property>
+  </action>
+  <action name="actionLoad_From_Folder">
+   <property name="text">
+    <string>Load From Folder</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
  </widget>

@@ -90,6 +90,8 @@ private slots:
 
     void on_actionMission_triggered();
 
+    void on_actionLoad_From_Folder_triggered();
+
 protected:
     void resizeEvent(QResizeEvent *e);
     void resizeTable();

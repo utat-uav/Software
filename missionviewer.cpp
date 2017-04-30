@@ -10,15 +10,20 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
-
-#include "imagewidget.h"
-#include "customview.h"
 #include <QSet>
 #include <QTableWidget>
 #include <QHBoxLayout>
 #include <QDesktopWidget>
 #include <iostream>
 #include <string>
+#include <QNetworkCookie>
+#include <assert.h>
+#include <QMessageBox>
+#include <QNetworkCookieJar>
+
+#include "imagewidget.h"
+#include "customview.h"
+#include "interoplogin.h"
 
 #define SCALE_FACTOR 50000.0
 #define PI 3.141592653589793238462643383279502884L
@@ -34,17 +39,23 @@ MissionViewer::MissionViewer(QList<ImageWidget *> *items, QWidget *parent) :
 {
     ui->setupUi(this);
 
-//    QToolBar *menubar = new QToolBar();
-//    this->layout()->setMenuBar(menubar);
-//    menubar->addAction(ui->actionrefresh);
+    QToolBar *menubar = new QToolBar();
+    menubar->setStyleSheet("QToolBar { background : white }");
+    this->layout()->setMenuBar(menubar);
+
+    loginAction = new QAction(QString("Login"), menubar);
+    menubar->addAction(loginAction);
+    connect(loginAction, &QAction::triggered, this, &MissionViewer::login);
 
     iconLength = 180;
 
     connect(this, SIGNAL(requestUpdate()), this, SLOT(update()), Qt::ConnectionType::QueuedConnection);
     connect(ui->graphicsView, &CustomView::mouseMoved, this, &MissionViewer::mouseMoved);
 
-    networkManager = new QNetworkAccessManager(this);
-    connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(networkManagerFinished(QNetworkReply*)));
+    mapNetworkManager = new QNetworkAccessManager(this);
+    connect(mapNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(mapNetworkManagerFinished(QNetworkReply*)));
+
+    ui->tableWidget->setEnabled(false);
 }
 
 MissionViewer::~MissionViewer()
@@ -287,6 +298,7 @@ void MissionViewer::fillTargetTable()
     }
 
     connect(ui->tableWidget, &QTableWidget::cellDoubleClicked, this, &MissionViewer::moveToTarget);
+    ui->tableWidget->setEnabled(true);
 }
 
 void MissionViewer::on_actionrefresh_triggered()
@@ -333,10 +345,10 @@ void MissionViewer::download(const QString &urlStr)
 {
     QUrl url(urlStr);
     QNetworkRequest request(url);
-    networkManager->get(request);
+    mapNetworkManager->get(request);
 }
 
-void MissionViewer::networkManagerFinished(QNetworkReply *reply)
+void MissionViewer::mapNetworkManagerFinished(QNetworkReply *reply)
 {
     if (reply->error() != QNetworkReply::NoError)
     {
@@ -350,7 +362,7 @@ void MissionViewer::networkManagerFinished(QNetworkReply *reply)
         qDebug() << "must go to:" << url;
         return;
     }
-    qDebug() << "ContentType:" << reply->header(QNetworkRequest::ContentTypeHeader).toString();
+    //qDebug() << "ContentType:" << reply->header(QNetworkRequest::ContentTypeHeader).toString();
     QByteArray jpegData = reply->readAll();
     QPixmap pixmap;
     pixmap.loadFromData(jpegData);
@@ -383,10 +395,10 @@ QPixmap MissionViewer::pixmapFromTarget(QString& folderPath, TargetData& target)
 
 void MissionViewer::animateMovement(QPointF start, QPointF end)
 {
-    float startZoom = ui->graphicsView->transform().m11() / initialScale;
-    int iterations = float(animationDuration) / refreshInterval;
-    float ds = 1.0 / float(iterations);
-    float minZoom;
+    double startZoom = ui->graphicsView->transform().m11() / initialScale;
+    int iterations = double(animationDuration) / refreshInterval;
+    double ds = 1.0 / double(iterations);
+    double minZoom;
 
     if (startZoom > 2.0)
         minZoom = 0.6 * startZoom;
@@ -395,13 +407,13 @@ void MissionViewer::animateMovement(QPointF start, QPointF end)
 
     for (int i = 1; i <= iterations; ++i)
     {
-        float s = ds * i;
+        double s = ds * i;
         QPointF curCenter;
 
         // reset scale
-        float currentScale = ui->graphicsView->transform().m11();
-        float resetZoom = initialScale / currentScale;
-        float curZoom;
+        double currentScale = ui->graphicsView->transform().m11();
+        double resetZoom = initialScale / currentScale;
+        double curZoom;
 
         if (minZoom == -1.0)
         {
@@ -429,4 +441,144 @@ void MissionViewer::animateMovement(QPointF start, QPointF end)
         QThread::msleep(refreshInterval);
     }
     animationOngoing = false;
+}
+
+void MissionViewer::doLogout()
+{
+    this->loginAction->setText("Login");
+    serverInfo.loggedIn = false;
+}
+
+void MissionViewer::doLogin()
+{
+    this->loginAction->setText("Logout");
+    serverInfo.loggedIn = true;
+}
+
+void MissionViewer::login()
+{
+    // Ensure that the text is "login" if we are not logged in
+    assert((loginAction->text() == "Login") == (!serverInfo.loggedIn));
+
+    if (serverInfo.loggedIn)
+    {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Logout", "Are you sure you want to log out?",
+                                      QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::Yes)
+        {
+            doLogout();
+        }
+
+        return;
+    }
+
+    InteropLogin interopLogin(this);
+    if (interopLogin.exec())
+    {
+        InteropLogin::ServerInfo temp = interopLogin.getServerInfo();
+
+        serverInfo = temp;
+
+        QString data = ("username=" + serverInfo.username +
+                        "&password=" + serverInfo.password);
+
+        QByteArray replyData;
+        if (auvsiRequest("/api/login", POST, data.toUtf8(), replyData))
+        {
+            qDebug() << "Success" << replyData;
+        }
+        else
+        {
+            QMessageBox::warning(this, tr("Error"),
+                               tr("Login failed."),
+                               QMessageBox::Ok);
+        }
+    }
+}
+
+/*
+ * Returns true if success or false if fail
+ * api = "/api/login" for example
+ * requestType = POST for example
+ */
+bool MissionViewer::auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
+                                 QByteArray &replyData)
+{
+    assert((loginAction->text() == "Login") == (!serverInfo.loggedIn));
+
+    QString requestAddr = QString("http://" + serverInfo.ip + ":" + QString::number(serverInfo.port)) + api;
+    QUrl url(requestAddr);
+    QNetworkRequest request(url);
+    QNetworkAccessManager manager;
+
+    // AUVSI uses urlencoded POST
+    if (requestType == POST)
+    {
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    }
+
+    if (serverInfo.loggedIn)
+    {
+        QNetworkCookieJar *cookieJar = new QNetworkCookieJar(&manager);
+        cookieJar->insertCookie(serverInfo.cookie);
+        manager.setCookieJar(cookieJar);
+    }
+
+    QEventLoop eventLoop;
+    QObject::connect(&manager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+
+    // Do POST
+    QNetworkReply *reply;
+
+    switch (requestType)
+    {
+    case POST:
+        reply = manager.post(request, data);
+        break;
+    case GET:
+        reply = manager.get(request);
+        break;
+    default:
+        qDebug() << "REQUEST TYPE NOT RECOGNIZED";
+        return false;
+    }
+
+    eventLoop.exec();
+
+    // Success
+    if (reply->error() == QNetworkReply::NoError)
+    {
+        if (reply->hasRawHeader("Set-Cookie"))
+        {
+            QVariant cookieVar = reply->header(QNetworkRequest::SetCookieHeader);
+            if (cookieVar.isValid())
+            {
+                QList<QNetworkCookie> cookies = cookieVar.value<QList<QNetworkCookie>>();
+                foreach (const QNetworkCookie &cookie, cookies)
+                {
+                    serverInfo.cookie = cookie;
+                }
+            }
+
+            qDebug() << "Has cookie" << serverInfo.cookie;
+        }
+
+        replyData = reply->readAll();
+        doLogin();
+        delete reply;
+        return true;
+    }
+    // Failure
+    else
+    {
+        doLogout();
+        replyData = reply->errorString().toUtf8();
+        qDebug() << "Error" << replyData;
+        delete reply;
+        return false;
+    }
+
+    // Should never get here
+    return false;
 }

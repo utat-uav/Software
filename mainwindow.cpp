@@ -287,12 +287,16 @@ void MainWindow::on_loadButton_clicked()
 {
     if (loading) return;
 
-    QSettings config(QDir::currentPath()+"config.ini",QSettings::IniFormat);
+    QSettings settings;
+    qDebug() << settings.value("User Settings/Image Folder","/home").toString();
+
     // Gets the directory from a separate window
-    QString dir = QFileDialog::getExistingDirectory(this, tr("Load Directory..."), config.value("User Settings/Image Folder","/home").toString(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    config.setValue("User Settings/Image Folder",dir);
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Load Directory..."),
+                                                    settings.value("User Settings/Image Folder","/home").toString(),
+                                                    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
     if (dir == "") return;
+    settings.setValue("User Settings/Image Folder",dir);
 
     // Clear items
     ui->actionOnly_images_with_targets->setChecked(false);
@@ -564,4 +568,9 @@ void MainWindow::on_actionOnly_images_with_targets_triggered()
 void MainWindow::on_actionMission_triggered()
 {
     missionViewer->show();
+}
+
+void MainWindow::on_actionLoad_From_Folder_triggered()
+{
+    this->on_loadButton_clicked();
 }
