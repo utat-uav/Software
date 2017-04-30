@@ -1,7 +1,6 @@
 #include "imagewidget.h"
 #include "ui_imagewidget.h"
 
-#include <assert.h>
 #include "mainwindow.h"
 
 int ImageWidget::ImageLoader::numLoaders = 0;
@@ -254,7 +253,10 @@ void ImageWidget::mouseDoubleClickEvent(QMouseEvent *event){
         }
         else
         {
-            assert(targetList->parent == this);
+            if (targetList->parent != this)
+            {
+                qFatal("targetList->parent != this");
+            }
 
             bool found = mainWindow->findTab(targetList) ;
             if (!found)

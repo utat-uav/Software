@@ -43,6 +43,7 @@ private:
 
     // Actions
     QAction *loginAction;
+    QAction *postAllTargetsAction;
 
     // animation parameters
     QMutex animationLock;
@@ -82,11 +83,15 @@ private:
         POST,
         GET
     };
+    bool auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
+                      QByteArray &replyData);
+
     void login();
     void doLogin();
     void doLogout();
-    bool auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
-                      QByteArray &replyData);
+    void postAllTargets();
+    void postTargetIdx(int idx);
+
 };
 
 #endif // MISSIONVIEWER_H

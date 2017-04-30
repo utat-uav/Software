@@ -17,9 +17,12 @@
 #include <iostream>
 #include <string>
 #include <QNetworkCookie>
-#include <assert.h>
 #include <QMessageBox>
 #include <QNetworkCookieJar>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStringList>
+#include <QString>
 
 #include "imagewidget.h"
 #include "customview.h"
@@ -46,6 +49,11 @@ MissionViewer::MissionViewer(QList<ImageWidget *> *items, QWidget *parent) :
     loginAction = new QAction(QString("Login"), menubar);
     menubar->addAction(loginAction);
     connect(loginAction, &QAction::triggered, this, &MissionViewer::login);
+
+    postAllTargetsAction = new QAction(QString("Upload all targets"), menubar);
+    menubar->addAction(postAllTargetsAction);
+    connect(postAllTargetsAction, &QAction::triggered, this, &MissionViewer::postAllTargets);
+    postAllTargetsAction->setEnabled(false);
 
     iconLength = 180;
 
@@ -245,7 +253,8 @@ void MissionViewer::fillTargetTable()
         // set subtable of classification info
         QTableWidget* classificationTable = new QTableWidget(6, 1);
         //classificationTable->setAttribute(Qt::WA_NoMousePropagation);
-        QString latlonStr = QString::number(uniqueTargets[i].latlon.lat) + " , " + QString::number(uniqueTargets[i].latlon.lon);
+        QString latlonStr = QString::number(uniqueTargets[i].latlon.lat, 'f', 7) + ", " +
+                            QString::number(uniqueTargets[i].latlon.lon, 'f', 7);
         QTableWidgetItem *latlonDesc = new QTableWidgetItem(latlonStr);
         QTableWidgetItem *charDesc = new QTableWidgetItem(uniqueTargets[i].alphanumeric);
         QTableWidgetItem *shapeDesc = new QTableWidgetItem(uniqueTargets[i].shape);
@@ -445,21 +454,27 @@ void MissionViewer::animateMovement(QPointF start, QPointF end)
 
 void MissionViewer::doLogout()
 {
-    this->loginAction->setText("Login");
+    loginAction->setText("Login");
     serverInfo.loggedIn = false;
+    postAllTargetsAction->setEnabled(false);
 }
 
 void MissionViewer::doLogin()
 {
     this->loginAction->setText("Logout");
     serverInfo.loggedIn = true;
+    postAllTargetsAction->setEnabled(true);
 }
 
 void MissionViewer::login()
 {
     // Ensure that the text is "login" if we are not logged in
-    assert((loginAction->text() == "Login") == (!serverInfo.loggedIn));
+    if ((loginAction->text() == "Login") != (!serverInfo.loggedIn))
+    {
+        qFatal("(loginAction->text() == \"Login\") != (!serverInfo.loggedIn)");
+    }
 
+    // If already logged in, then we should prompt for logout
     if (serverInfo.loggedIn)
     {
         QMessageBox::StandardButton reply;
@@ -473,6 +488,7 @@ void MissionViewer::login()
         return;
     }
 
+    // Login code
     InteropLogin interopLogin(this);
     if (interopLogin.exec())
     {
@@ -489,7 +505,10 @@ void MissionViewer::login()
             qDebug() << "Success" << replyData;
 
             // Do the actual login ui changes
-            assert(!serverInfo.loggedIn);
+            if (serverInfo.loggedIn)
+            {
+                qFatal("serverInfo.loggedIn");
+            }
             doLogin();
         }
         else
@@ -511,7 +530,10 @@ void MissionViewer::login()
 bool MissionViewer::auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
                                  QByteArray &replyData)
 {
-    assert((loginAction->text() == "Login") == (!serverInfo.loggedIn));
+    if ((loginAction->text() == "Login") != (!serverInfo.loggedIn))
+    {
+        qFatal("(loginAction->text() == \"Login\") != (!serverInfo.loggedIn)");
+    }
 
     QString requestAddr = QString("http://" + serverInfo.ip + ":" + QString::number(serverInfo.port)) + api;
     QUrl url(requestAddr);
@@ -589,3 +611,83 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
     // Should never get here
     return false;
 }
+
+void MissionViewer::postAllTargets()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Upload Targets",
+                                  "Do you want to upload all the targets to the AUVSI interop server?",
+                                  QMessageBox::Yes | QMessageBox::No);
+    if (reply != QMessageBox::Yes)
+    {
+        return;
+    }
+
+    for (int i = 0; i < ui->tableWidget->rowCount(); ++i)
+    {
+        postTargetIdx(i);
+    }
+}
+
+/*
+ * Idx is the row of the table
+ */
+void MissionViewer::postTargetIdx(int idx)
+{
+    QTableWidget* classificationTable = dynamic_cast<QTableWidget*>(ui->tableWidget->cellWidget(idx, 1));
+
+    if (classificationTable == NULL)
+    {
+        qDebug() << "classificationTable == NULL";
+        return;
+    }
+
+    QTableWidgetItem *latlonDesc = dynamic_cast<QTableWidgetItem*>(classificationTable->item(0, 0));
+    QTableWidgetItem *charDesc = dynamic_cast<QTableWidgetItem*>(classificationTable->item(1, 0));
+    QTableWidgetItem *shapeDesc = dynamic_cast<QTableWidgetItem*>(classificationTable->item(2, 0));
+    QTableWidgetItem *charColorDesc = dynamic_cast<QTableWidgetItem*>(classificationTable->item(3, 0));
+    QTableWidgetItem *shapeColorDesc = dynamic_cast<QTableWidgetItem*>(classificationTable->item(4, 0));
+    QTableWidgetItem *orientationDesc = dynamic_cast<QTableWidgetItem*>(classificationTable->item(5, 0));
+
+    if ((latlonDesc == NULL) ||
+        (charDesc == NULL) ||
+        (shapeDesc == NULL) ||
+        (charColorDesc == NULL) ||
+        (shapeColorDesc == NULL) ||
+        (orientationDesc == NULL))
+    {
+        qDebug() << "classificationTable items == NULL";
+        return;
+    }
+
+    QString latlonText = latlonDesc->text();
+    QStringList latlonList = latlonText.split(",");
+
+    if (latlonList.size() != 2)
+    {
+        qDebug() << "latlonList.size() != 2";
+        return;
+    }
+
+    double lat = latlonList[0].toDouble();
+    double lon = latlonList[1].toDouble();
+
+    QJsonObject targetJsonObj;
+    targetJsonObj["type"] = "standard";
+    targetJsonObj["latitude"] = lat;
+    targetJsonObj["longitude"] = lon;
+    targetJsonObj["background_color"] = shapeColorDesc->text();
+    targetJsonObj["alphanumeric_color"] = charColorDesc->text();
+    targetJsonObj["alphanumeric"] = charDesc->text();
+    targetJsonObj["autonomous"] = true;
+
+    QJsonDocument jsonDoc(targetJsonObj);
+    QString targetJsonStr = jsonDoc.toJson();
+
+    QByteArray replyData;
+    if (auvsiRequest("/api/targets", POST, targetJsonStr.toUtf8(), replyData))
+    {
+        qDebug() << "Success" << replyData;
+    }
+}
+
