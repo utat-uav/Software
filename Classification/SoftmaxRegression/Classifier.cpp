@@ -529,7 +529,7 @@ std::string Classifier::getShapeFromIdx(int idx)
 	case 5:
 		return "quarter_circle";
 	case 6:
-		return "semi_circle";
+		return "semicircle";
 	case 7:
 		return "pentagon";
 	case 8:

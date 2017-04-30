@@ -736,6 +736,7 @@ void MissionViewer::postTargetIdx(int idx)
     else
     {
         qDebug() << "Failure" << replyData;
+        qDebug() << targetJsonObj["shape"];
     }
 }
 
