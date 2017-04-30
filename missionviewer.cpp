@@ -236,6 +236,10 @@ void MissionViewer::removeDuplicates(QList<TargetData>& original)
 
 void MissionViewer::fillTargetTable()
 {
+    // Clear target table first
+    ui->tableWidget->clear();
+    ui->tableWidget->clearContents();
+
     // set table rows based on number of unique items
     int numTargets = uniqueTargets.size();
     ui->tableWidget->setRowCount(numTargets);
@@ -333,6 +337,7 @@ void MissionViewer::on_actionrefresh_triggered()
     downloadMap(imagePath);
 
     // get unique targets
+    uniqueTargets.clear();
     for (int i = 0; i < items->size(); ++i)
     {
         QList<TargetData>& targetData = items->at(i)->getTargetData();
