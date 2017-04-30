@@ -159,8 +159,8 @@ int Classifier::classify(const Mat &imageMat, Results &results)
 	if (!falsePositiveNoted)
 	{
 		std::stringstream ss;
-		ss << "Classified as (" << results.character << ", " << results.shape  << ") with (" <<
-			results.characterConfidence << ", " << results.shapeConfidence << ") confidence. ";
+		ss << "Classified as " << results.character << " - " << results.shape  << " with " <<
+			results.characterConfidence << " - " << results.shapeConfidence << " confidence. ";
 		results.description = ss.str();
 		cout << results.description << endl;
 
