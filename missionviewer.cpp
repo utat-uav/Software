@@ -487,6 +487,9 @@ void MissionViewer::login()
         if (auvsiRequest("/api/login", POST, data.toUtf8(), replyData))
         {
             qDebug() << "Success" << replyData;
+
+            assert(!serverInfo.loggedIn);
+            doLogin();
         }
         else
         {
@@ -501,6 +504,8 @@ void MissionViewer::login()
  * Returns true if success or false if fail
  * api = "/api/login" for example
  * requestType = POST for example
+ *
+ * Logs out the user if an invalid request is made
  */
 bool MissionViewer::auvsiRequest(const QString &api, const int requestType, const QByteArray &data,
                                  QByteArray &replyData)
@@ -565,14 +570,17 @@ bool MissionViewer::auvsiRequest(const QString &api, const int requestType, cons
         }
 
         replyData = reply->readAll();
-        doLogin();
         delete reply;
         return true;
     }
     // Failure
     else
     {
-        doLogout();
+        if (serverInfo.loggedIn)
+        {
+            doLogout();
+        }
+
         replyData = reply->errorString().toUtf8();
         qDebug() << "Error" << replyData;
         delete reply;
